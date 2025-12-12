@@ -33,4 +33,4 @@ Open `index.html` in a web browser to navigate through all etudes. Each etude pa
 
 ---
 
-**Stanford CCRMA 220A** | Mateo Larrea | 2024
+**Stanford CCRMA 220A** | Mateo Larrea | 2025
