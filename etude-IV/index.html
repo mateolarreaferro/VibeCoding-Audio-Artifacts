@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etude IV - HW3 - Binaural Radio Play</title>
+    <link rel="stylesheet" href="../theme.css">
+    <style>
+        .nav-home {
+            position: fixed;
+            top: var(--spacing-md);
+            left: var(--spacing-md);
+            padding: 10px 20px;
+            background: var(--color-background);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            color: var(--color-text);
+            text-decoration: none;
+            font-size: 0.9em;
+            font-weight: var(--font-weight-medium);
+            transition: all var(--transition-fast);
+            z-index: 1000;
+        }
+        .nav-home:hover {
+            background: var(--color-text);
+            color: var(--color-background);
+            border-color: var(--color-text);
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: var(--color-background);
+            color: var(--color-text);
+            line-height: 1.7;
+            padding: var(--spacing-2xl) var(--spacing-md);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: var(--spacing-sm);
+            font-weight: var(--font-weight-light);
+            letter-spacing: -0.02em;
+        }
+
+        h2 {
+            font-size: 1.8em;
+            margin-top: var(--spacing-2xl);
+            margin-bottom: var(--spacing-md);
+            font-weight: var(--font-weight-light);
+            letter-spacing: -0.01em;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            color: var(--color-text-muted);
+            margin-bottom: 50px;
+            font-weight: var(--font-weight-light);
+        }
+
+        p {
+            margin-bottom: var(--spacing-md);
+            font-size: 1em;
+            color: var(--color-text);
+            font-weight: var(--font-weight-light);
+        }
+
+        .links {
+            border: 1px solid var(--color-border);
+            padding: var(--spacing-xl);
+            margin: 50px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-md);
+        }
+
+        .link-item {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .link-item strong {
+            font-weight: 400;
+            color: #666;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .link-item a {
+            color: #fff;
+            background: #0a0a0a;
+            text-decoration: none;
+            padding: 14px 24px;
+            transition: all 0.3s ease;
+            font-weight: 400;
+            text-align: center;
+            border: 2px solid #0a0a0a;
+            font-size: 0.95em;
+        }
+
+        .link-item a:hover {
+            background: #fff;
+            color: #0a0a0a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        code {
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+            font-weight: 400;
+        }
+
+        pre {
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+            padding: 30px;
+            overflow-x: auto;
+            margin: 30px 0;
+            position: relative;
+        }
+
+        pre::before {
+            content: 'RadioPlay.sat';
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: #0a0a0a;
+            color: #ffffff;
+            padding: 4px 12px;
+            font-size: 0.75em;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+        }
+
+        pre code {
+            background: transparent;
+            padding: 0;
+            display: block;
+            color: #0a0a0a;
+            font-size: 0.85em;
+            line-height: 1.8;
+            margin-top: 30px;
+        }
+
+        ul {
+            margin: 20px 0;
+            padding-left: 20px;
+            list-style: none;
+        }
+
+        li {
+            margin: 10px 0;
+            color: #333;
+            font-weight: 300;
+            padding-left: 15px;
+            position: relative;
+        }
+
+        li::before {
+            content: "–";
+            position: absolute;
+            left: 0;
+        }
+
+        strong {
+            font-weight: 400;
+        }
+
+        .note {
+            border-left: 2px solid #0a0a0a;
+            padding-left: 20px;
+            margin: 40px 0;
+        }
+
+        .satie-link {
+            margin-top: 10px;
+            font-size: 0.95em;
+        }
+
+        .satie-link a {
+            color: #0a0a0a;
+            text-decoration: none;
+            border-bottom: 1px solid #0a0a0a;
+            transition: opacity 0.2s ease;
+            font-weight: 400;
+        }
+
+        .satie-link a:hover {
+            opacity: 0.6;
+        }
+
+        .repo-link {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 12px 28px;
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            color: #0a0a0a;
+            text-decoration: none;
+            font-weight: 400;
+            transition: all 0.3s ease;
+        }
+
+        .repo-link:hover {
+            background: #0a0a0a;
+            color: #fff;
+            border-color: #0a0a0a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .code-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .code-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .code-section h3 {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            font-weight: 400;
+            color: #0a0a0a;
+        }
+
+        .code-section pre {
+            flex: 1;
+            margin: 0;
+        }
+
+        .chuck-player {
+            margin: 30px 0;
+            padding: 30px;
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+        }
+
+        .chuck-player button {
+            padding: 14px 28px;
+            background: #0a0a0a;
+            color: #fff;
+            border: 2px solid #0a0a0a;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 400;
+            transition: all 0.3s ease;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', Arial, sans-serif;
+        }
+
+        .chuck-player button:hover:not(:disabled) {
+            background: #fff;
+            color: #0a0a0a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .chuck-player button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .chuck-player #status {
+            margin-top: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 40px 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            h2 {
+                font-size: 1.4em;
+                margin-top: 40px;
+            }
+
+            .links {
+                grid-template-columns: 1fr;
+            }
+
+            .repo-link {
+                width: 100%;
+                text-align: center;
+            }
+
+            pre code {
+                font-size: 0.75em;
+            }
+
+            .code-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="nav-home">← Home</a>
+    <div class="container">
+        <p class="subtitle" style="margin-bottom: 10px;">Mateo Larrea</p>
+        <div class="text-muted" style="font-size: 0.9em; margin-bottom: 8px;">Etude IV</div>
+        <h1>220A - HW3 — Radio Play</h1>
+        <p class="subtitle">Satie Prototype</p>
+
+        <div class="links">
+            <div class="link-item">
+                <strong>Demo</strong>
+                <a href="https://vimeo.com/1136802861?share=copy&fl=sv&fe=ci" target="_blank">Watch Demo</a>
+            </div>
+            <div class="link-item">
+                <strong>Ambisonic Audio</strong>
+                <a href="https://drive.google.com/file/d/14vFLvHL3RRtrPHNwGH3ZykHgt_poxzji/view?usp=sharing" target="_blank">Download Audio</a>
+            </div>
+        </div>
+
+        <h2>Overview</h2>
+        <p>
+            For this assignment I used my own in-progress domain-specific language (DSL) called <strong>Satie</strong>,
+            which I'm developing for procedural and spatial audio composition. The radio play's source material was
+            programmatically generated using the <strong>ElevenLabs SFX API</strong>, then arranged and rendered through Satie.
+        </p>
+        <a href="https://github.com/mateolarreaferro/SatieLang" target="_blank" class="repo-link">View Satie Repository →</a>
+
+        <h2>Deliverables</h2>
+        <p>This submission includes:</p>
+
+        <ul>
+            <li>WebChucK implementation with interactive audio playback (<code>Monks-Binaural.wav</code>)</li>
+            <li>ChucK source code demonstrating binaural audio playback techniques</li>
+            <li>The original Ambisonic 4-channel audio file from the Satie implementation</li>
+            <li>Satie source code (<code>.sat</code>) showing the complete spatial audio scene</li>
+            <li>Demo video showing the implementation in action</li>
+        </ul>
+
+        <p>
+            These together document both the ChucK/WebChucK approach and the Satie DSL approach, demonstrating different methodologies for spatial audio composition.
+        </p>
+
+        <div class="note">
+            <p>
+                <strong>Note:</strong> If it turns out that a ChucK / webchuck implementation is strictly
+                required for grading, I'm happy to translate this Satie session into an equivalent ChucK mix script.
+                For now, I'm submitting this version to show the same concepts realized through my DSL.
+            </p>
+        </div>
+
+        <h2>Source Code Comparison</h2>
+        <p>Below you can see the implementation in both ChucK (with WebChucK player) and Satie:</p>
+
+        <div class="chuck-player">
+            <input type="file" id="fileInput" accept=".wav" style="display: none;">
+            <button id="loadBtn">Load Audio File</button>
+            <button id="playBtn" disabled>Play Monks Binaural (ChucK)</button>
+            <div id="status">Please load Monks-Binaural.wav first</div>
+        </div>
+
+        <div class="code-container">
+            <div class="code-section">
+                <h3>ChucK Implementation</h3>
+                <pre><code>0 => int isPlaying;
+now => time start;
+
+spork ~clip("Monks-Binaural.wav");
+
+do 1::samp => now; until (!isPlaying);
+<<< "done", (now-start)/second, "seconds total" >>>;
+
+fun void clip(string name) {
+    isPlaying++;
+    SndBuf2 mySnd => dac;
+    mySnd.read(name);
+    mySnd.length() => dur myDur;
+    <<< name, "is playing at", (now-start)/second,
+        "for", myDur/second, "seconds" >>>;
+    myDur => now;
+    isPlaying--;
+}</code></pre>
+            </div>
+
+            <div class="code-section">
+                <h3>Satie Implementation</h3>
+                <pre><code>group intro
+persistent
+    loop ambience/forest
+        volume goto(0and0.1 in 80)
+        pitch 0.5
+        filter mode lowpass cutoff goto(18000and100 as inoutquad in 300)
+        end 350
+
+    oneshot water/1to4
+        volume goto(0and0.5 in 20)
+        pitch goto(0.7and1 as incubic in 15)
+        move x -10to10 z -10to10 speed 0.1
+        visual trail
+        color blue
+        filter mode lowpass cutoff goto(18000and100 as inoutquad in 80)
+        end 150
+    oneshot ambience/rain
+        start 20
+        volume goto(0and0.5 in 40)
+        pitch 1
+        filter mode lowpass cutoff goto(18000and100 as inoutquad in 100)
+        end 150
+
+    oneshot sacred/bells every 50to100
+        start 40
+        volume goto(0and0.5 in 20)
+        move fly speed 0.5
+        delay wet 0.3 time 0.5to0.9 feedback 0.2to0.5
+        visual trail
+        color white
+        end 200
+
+    oneshot sacred/mastermonk
+        start 60
+        volume goto(0and0.2 in 20)
+        pitch goto(0and1 as incubic in 20)
+        delay wet 0.3 time 0.5to0.9 feedback 0.2to0.5
+        filter mode lowpass cutoff goto(18000and0 as inoutquad in 200)
+        move fly speed 0.5
+        visual trail
+        color white
+
+    oneshot ambience/playground
+        start 100
+        volume goto(0and0.2 in 40)
+        pitch 1
+        filter mode lowpass cutoff goto(18000and100 as inoutquad in 100)
+        persistent
+
+    oneshot piece/13
+        start 140
+        volume goto(0and1 in 60)
+
+    oneshot campfire
+        start 120
+        volume goto(0and0.5 in 40)
+        move walk
+        filter mode lowpass cutoff goto(18000and100 as inoutquad in 100)
+
+    oneshot end
+        start 280
+        volume 1
+        visual cube
+        color white
+
+    oneshot radioplay
+        start 280
+        volume .5
+        visual cube
+        color black
+endgroup</code></pre>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/webchuck/+esm" type="module"></script>
+    <script type="module">
+        import { Chuck } from 'https://cdn.jsdelivr.net/npm/webchuck/+esm';
+
+        let theChuck;
+        let isPlayingState = false;
+        let audioBuffer = null;
+
+        const playBtn = document.getElementById('playBtn');
+        const loadBtn = document.getElementById('loadBtn');
+        const fileInput = document.getElementById('fileInput');
+        const statusDiv = document.getElementById('status');
+
+        // Load button triggers file input
+        loadBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Handle file selection
+        fileInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                statusDiv.textContent = 'Loading audio file...';
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    audioBuffer = new Uint8Array(arrayBuffer);
+                    console.log('Audio file loaded, size:', audioBuffer.length);
+                    statusDiv.textContent = 'Audio file loaded! Click Play to start.';
+                    playBtn.disabled = false;
+                } catch (error) {
+                    console.error('Failed to load audio file:', error);
+                    statusDiv.textContent = 'Failed to load audio file';
+                }
+            }
+        });
+
+        playBtn.addEventListener('click', async () => {
+            if (isPlayingState) {
+                statusDiv.textContent = 'Already playing...';
+                return;
+            }
+
+            if (!audioBuffer) {
+                statusDiv.textContent = 'Please load an audio file first';
+                return;
+            }
+
+            try {
+                statusDiv.textContent = 'Initializing WebChucK...';
+
+                if (!theChuck) {
+                    // Initialize ChucK without preloaded files first
+                    theChuck = await Chuck.init([]);
+                    console.log('WebChucK initialized');
+
+                    // Add print callback to see ChucK console output
+                    theChuck.chuckPrint = (message) => {
+                        console.log('ChucK:', message);
+                    };
+                }
+
+                statusDiv.textContent = 'Loading audio into WebChucK...';
+
+                // Load the audio file into WebChucK filesystem
+                await theChuck.createFile("", "Monks-Binaural.wav", audioBuffer);
+                console.log('Audio file loaded into WebChucK filesystem');
+
+                isPlayingState = true;
+                playBtn.disabled = true;
+
+                statusDiv.textContent = 'Playing Monks-Binaural.wav...';
+
+                const chuckCode = `
+0 => int isPlaying;
+now => time start;
+
+<<< "Starting playback..." >>>;
+
+spork ~clip("Monks-Binaural.wav");
+
+do 1::samp => now; until (!isPlaying);
+<<< "done", (now-start)/second, "seconds total" >>>;
+
+fun void clip(string name) {
+    <<< "In clip function, about to read:", name >>>;
+    isPlaying++;
+    SndBuf2 mySnd => dac;
+    mySnd.read(name);
+    mySnd.length() => dur myDur;
+    <<< name, "is playing at", (now-start)/second,
+        "for", myDur/second, "seconds" >>>;
+    myDur => now;
+    isPlaying--;
+    <<< "Clip finished" >>>;
+}
+`;
+
+                console.log('Running ChucK code...');
+                const result = await theChuck.runCode(chuckCode);
+                console.log('ChucK code executed, result:', result);
+
+                statusDiv.textContent = 'Playing... (check browser console for ChucK output)';
+
+                // Monitor ChucK for completion or use estimated duration
+                // Using a generous timeout - adjust based on your actual file length
+                setTimeout(() => {
+                    isPlayingState = false;
+                    playBtn.disabled = false;
+                    statusDiv.textContent = 'Playback complete. Click to play again.';
+                }, 60000); // 60 seconds timeout, adjust as needed
+
+            } catch (error) {
+                console.error('WebChucK Error:', error);
+                statusDiv.textContent = `Error: ${error.message}`;
+                isPlayingState = false;
+                playBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

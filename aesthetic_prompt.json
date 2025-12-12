@@ -1,0 +1,70 @@
+{
+  "role": "Claude Code",
+  "task": "Apply an ElevenLabs-inspired white, minimal, premium UI aesthetic across the entire web application without changing core functionality.",
+  "goals": [
+    "Clean white background with a high-end minimal aesthetic",
+    "Consistent typography, spacing, border radii, shadows, and interaction states",
+    "Subtle, smooth hover and active interactions",
+    "Accessible focus states and adequate contrast",
+    "Maintainable styling via centralized design tokens"
+  ],
+  "constraints": [
+    "Do not modify application logic or functionality",
+    "Prefer a single global theme file plus minimal component overrides",
+    "Use existing styling system if present (Tailwind or CSS)",
+    "Do not introduce heavy UI frameworks unless already used",
+    "Use a minimal neutral palette with a single accent color"
+  ],
+  "process": {
+    "step_1_repo_inspection": {
+      "identify_stack": true,
+      "locate_global_styles": true,
+      "identify_ui_surfaces": [
+        "header",
+        "navigation",
+        "layout",
+        "cards",
+        "buttons",
+        "forms",
+        "toggles",
+        "tabs",
+        "modals",
+        "toasts"
+      ]
+    },
+    "step_2_design_tokens": {
+      "colors": {
+        "background": "white or warm white",
+        "surface": "white",
+        "surface_muted": "very light gray",
+        "border": "light neutral gray",
+        "text": "near-black",
+        "text_muted": "mid gray",
+        "accent": "single subtle cool tone (blue/indigo)",
+        "destructive": "subtle red"
+      },
+      "typography": {
+        "font": "modern sans-serif or system stack",
+        "weights": {
+          "title": 600,
+          "body": "400-500",
+          "label": 500
+        }
+      },
+      "radii": {
+        "cards": "12-14px",
+        "inputs_buttons": "10-12px"
+      },
+      "shadows": "very subtle elevation with hover enhancement",
+      "spacing_scale": "8px base system",
+      "transitions": "150-220ms ease with reduced-motion support"
+    }
+  },
+  "deliverables": [
+    "Centralized theme tokens (Tailwind config or CSS variables)",
+    "Refactored styles using tokens instead of hardcoded values",
+    "Updated core components: buttons, inputs, cards, header",
+    "Checklist of modified files and changes",
+    "STYLEGUIDE.md documenting palette, components, spacing, and usage"
+  ]
+}

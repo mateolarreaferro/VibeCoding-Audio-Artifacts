@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etude II - Google Ngram "Mateo" Sonification</title>
+    <link rel="stylesheet" href="../theme.css">
+    <style>
+        .nav-home {
+            position: fixed;
+            top: var(--spacing-md);
+            left: var(--spacing-md);
+            padding: 10px 20px;
+            background: var(--color-background);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            color: var(--color-text);
+            text-decoration: none;
+            font-size: 0.9em;
+            font-weight: var(--font-weight-medium);
+            transition: all var(--transition-fast);
+            z-index: 1000;
+        }
+        .nav-home:hover {
+            background: var(--color-text);
+            color: var(--color-background);
+            border-color: var(--color-text);
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            padding-top: var(--spacing-2xl);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 3em;
+            letter-spacing: 8px;
+            font-weight: 900;
+            color: var(--color-text);
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+            font-weight: 300;
+            letter-spacing: 2px;
+            color: var(--color-text-muted);
+        }
+
+        .controls {
+            background: var(--color-surface);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--spacing-lg);
+            box-shadow: var(--shadow-subtle);
+            border: 1px solid var(--color-border);
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: var(--color-text);
+            color: var(--color-background);
+            border: 1px solid var(--color-text);
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            font-weight: var(--font-weight-semibold);
+        }
+
+        button:hover {
+            background: var(--color-background);
+            color: var(--color-text);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .slider-container label {
+            font-weight: 600;
+            min-width: 120px;
+            color: var(--color-text);
+        }
+
+        input[type="range"] {
+            width: 300px;
+            height: 8px;
+            border-radius: 5px;
+            background: var(--color-surface-muted);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--color-text);
+            cursor: pointer;
+            box-shadow: var(--shadow-subtle);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--color-text);
+            cursor: pointer;
+            border: none;
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .value-display {
+            min-width: 80px;
+            text-align: center;
+            background: var(--color-surface-muted);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        #chartCanvas {
+            width: 100%;
+            height: 400px;
+            background: var(--color-surface);
+            border-radius: 15px;
+            box-shadow: var(--shadow-subtle);
+            margin-bottom: 30px;
+            border: 1px solid var(--color-border);
+        }
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            background: var(--color-surface);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border: 1px solid var(--color-border);
+            transition: all 0.3s ease;
+            color: var(--color-text);
+        }
+
+        .status.playing {
+            background: var(--color-accent);
+            color: var(--color-background);
+            border-color: var(--color-accent);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: var(--shadow-subtle); }
+            50% { box-shadow: var(--shadow-hover); }
+        }
+
+        .prompts {
+            background: var(--color-surface);
+            padding: var(--spacing-md);
+            border-radius: var(--radius-lg);
+            margin-top: var(--spacing-lg);
+            box-shadow: var(--shadow-subtle);
+            border: 1px solid var(--color-border);
+        }
+
+        .prompts h3 {
+            margin-bottom: 15px;
+            color: var(--color-accent);
+        }
+
+        .prompts p {
+            line-height: 1.6;
+            background: var(--color-surface-muted);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--color-accent);
+            color: var(--color-text);
+        }
+
+        .info-box {
+            background: var(--color-surface);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid var(--color-border);
+        }
+
+        .current-value {
+            font-weight: bold;
+            color: var(--color-accent);
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="nav-home">← Home</a>
+    <div class="container">
+        <div class="text-muted" style="font-size: 0.9em; margin-bottom: 8px;">Etude II-LLM</div>
+        <h1>MATEO</h1>
+        <div class="subtitle">Interactive Real-Time Sonification</div>
+
+        <div class="status" id="status">Ready to explore</div>
+
+        <div class="info-box">
+            <div style="font-size: 0.9em; margin-bottom: 8px; opacity: 0.8;">Current Year: <span class="current-value" id="currentYear">1800</span></div>
+            <div style="font-size: 1.3em; margin-bottom: 8px;">Frequency: <span class="current-value" id="currentValue">--</span></div>
+            <div style="font-size: 0.9em;">Progress: <span id="currentIndex">0</span> / <span id="totalPoints">220</span> years</div>
+        </div>
+
+        <div class="controls">
+            <div class="control-row">
+                <button id="startStopBtn" disabled>Start</button>
+            </div>
+
+            <div class="slider-container">
+                <label for="updateRate">Update Rate:</label>
+                <input type="range" id="updateRate" min="1" max="50" value="20" step="1">
+                <span class="value-display"><span id="rateValue">20</span> ms</span>
+            </div>
+        </div>
+
+        <canvas id="chartCanvas"></canvas>
+
+        <div class="prompts">
+            <h3 style="color: #66fcf1; font-size: 1.3em; margin-bottom: 15px;">About This Sonification</h3>
+
+            <p><strong>Data Source:</strong> Google Books Ngram Viewer<br>
+            Tracks the frequency of "Mateo" in published literature from 1800-2019 across millions of digitized books. The dataset contains 220 annual measurements showing occurrences per million words.</p>
+
+            <p><strong>Key Observations:</strong><br>
+            • 1800-1925: Minimal presence (flat baseline)<br>
+            • 1926-1950: Initial gradual increase<br>
+            • 1950-2019: Exponential growth (29x increase)<br>
+            • Peak: 1.25×10⁻⁶ occurrences per million words (2019)</p>
+
+            <h3 style="color: #66fcf1; font-size: 1.3em; margin: 20px 0 15px 0;">Technical Implementation</h3>
+
+            <p><strong>Synthesis:</strong> FM (Frequency Modulation) synthesis using Web Audio API at 48kHz sample rate. Three parameters dynamically respond to data:</p>
+
+            <p style="padding-left: 20px;">
+            • <strong>Carrier Frequency</strong> (200-1000 Hz): Maps linearly to word frequency, creating perceivable pitch changes<br>
+            • <strong>Modulation Index</strong> (50-400): Controls harmonic complexity - higher values = richer timbres<br>
+            • <strong>Modulator Frequency</strong> (2-12 Hz): Affects the rate of frequency modulation
+            </p>
+
+            <p><strong>Smoothing:</strong> Uses exponentialRampToValueAtTime() for seamless parameter transitions, preventing audible clicks and creating a continuous sonic narrative.</p>
+
+            <p><strong>Interactivity:</strong> Real-time update rate control (1-50ms) allows you to explore different temporal perspectives - slow rates reveal fine detail, fast rates show the overall trend.</p>
+        </div>
+    </div>
+
+    <script>
+        // Web Audio API setup
+        let audioContext;
+        let carrier;
+        let modulator;
+        let modulatorGain;
+        let masterGain;
+        let isPlaying = false;
+        let currentIndex = 0;
+        let mateoData = [];
+        let yearData = [];
+        let updateInterval;
+        let updateRate = 20; // milliseconds
+
+        // UI Elements
+        const startStopBtn = document.getElementById('startStopBtn');
+        const updateRateSlider = document.getElementById('updateRate');
+        const rateValueDisplay = document.getElementById('rateValue');
+        const statusDisplay = document.getElementById('status');
+        const currentValueDisplay = document.getElementById('currentValue');
+        const currentYearDisplay = document.getElementById('currentYear');
+        const currentIndexDisplay = document.getElementById('currentIndex');
+        const totalPointsDisplay = document.getElementById('totalPoints');
+        const canvas = document.getElementById('chartCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Initialize audio context
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                    sampleRate: 48000
+                });
+
+                // Create FM synthesis chain
+                carrier = audioContext.createOscillator();
+                modulator = audioContext.createOscillator();
+                modulatorGain = audioContext.createGain();
+                masterGain = audioContext.createGain();
+
+                // Connect: modulator -> modulatorGain -> carrier.frequency
+                modulator.connect(modulatorGain);
+                modulatorGain.connect(carrier.frequency);
+
+                // Connect: carrier -> masterGain -> destination
+                carrier.connect(masterGain);
+                masterGain.connect(audioContext.destination);
+
+                // Set initial values
+                carrier.frequency.setValueAtTime(440, audioContext.currentTime);
+                modulator.frequency.setValueAtTime(5, audioContext.currentTime);
+                modulatorGain.gain.setValueAtTime(100, audioContext.currentTime);
+                masterGain.gain.setValueAtTime(0, audioContext.currentTime);
+
+                // Start oscillators
+                carrier.start();
+                modulator.start();
+            }
+        }
+
+        // Load Google Ngram data for "Mateo"
+        function loadMateoData() {
+            // Google Ngram data for "Mateo" (1800-2019)
+            mateoData = [4.292891842005986e-08, 4.019382462416843e-08, 4.919577352898349e-08, 4.3220805728034454e-08, 3.964388055927819e-08, 2.8612572374900732e-08, 3.395845522240799e-08, 3.5504346002872874e-08, 4.121053606301725e-08, 4.6026012080955884e-08, 4.6498575783411004e-08, 6.138006433279283e-08, 6.61622760387916e-08, 6.56470467827067e-08, 6.396722580197839e-08, 6.702239918610076e-08, 6.034952791468737e-08, 6.533517193929583e-08, 5.644775973629683e-08, 6.383883948452812e-08, 6.312411824995121e-08, 6.808820428107407e-08, 6.550359594419725e-08, 5.994295904088176e-08, 5.638239183472901e-08, 7.216042011545401e-08, 1.0607045197730258e-07, 1.2373185904428802e-07, 1.3966846574524944e-07, 2.2910212089349053e-07, 2.423137398669236e-07, 2.679746557987528e-07, 2.6204765341779943e-07, 2.3133557444257997e-07, 2.203367119234047e-07, 2.0292453888665867e-07, 1.36086922302476e-07, 1.322462449390319e-07, 1.0996972577004271e-07, 9.851018794344262e-08, 9.441706692671557e-08, 9.22048875346653e-08, 9.601260332812802e-08, 7.525760839907239e-08, 1.1874924611886075e-07, 1.3497191072734234e-07, 1.6056246059698814e-07, 1.7363973877796264e-07, 2.2785568631888964e-07, 2.2666253991181812e-07, 2.441818409693042e-07, 2.3370438892048435e-07, 2.291971686726616e-07, 2.254447884248683e-07, 2.8928779219735847e-07, 2.886443693585404e-07, 3.406042310416524e-07, 3.961819174946868e-07, 4.319156273270762e-07, 5.572319951495177e-07, 6.079227148347854e-07, 5.926729816759949e-07, 5.843144208483864e-07, 6.248456827506743e-07, 5.648890066822787e-07, 6.026628714802687e-07, 4.98182649672734e-07, 5.294160213712271e-07, 4.904909230520258e-07, 5.272761874104097e-07, 4.712652444790625e-07, 5.180317300203439e-07, 4.878719112509446e-07, 5.269637841008392e-07, 4.6394617113167313e-07, 5.314454572921282e-07, 5.020703213176603e-07, 5.143085672898451e-07, 5.182227320282047e-07, 4.931004217009363e-07, 5.079281411976158e-07, 5.341574974084194e-07, 5.330026908723084e-07, 5.861141687546478e-07, 6.289727504541329e-07, 6.681773397433841e-07, 7.186681289437859e-07, 7.3335804375217e-07, 7.835790419059257e-07, 7.67529789819881e-07, 7.435651566213762e-07, 7.16127431132918e-07, 6.923418871857783e-07, 6.50612296989753e-07, 6.270869903346465e-07, 5.762595378655533e-07, 5.964712223820763e-07, 6.230869270698999e-07, 7.728121269272898e-07, 7.914601058343708e-07, 8.292607763645979e-07, 8.52051511758743e-07, 9.00886464348462e-07, 9.476469894512515e-07, 9.531500089516547e-07, 8.568769577063254e-07, 8.542644179345058e-07, 8.558801433926939e-07, 8.554556529816182e-07, 8.685278852941078e-07, 8.484003696399409e-07, 8.525428256689338e-07, 8.98625947749159e-07, 9.438983040256841e-07, 1.0006385845632134e-06, 1.0554101176499638e-06, 1.0659932497349343e-06, 1.0541176119919067e-06, 1.0749486136774067e-06, 1.0433173624083532e-06, 1.0588078924099266e-06, 1.0451143452883116e-06, 1.0610105911317597e-06, 1.0655512759123148e-06, 1.1251031537540257e-06, 1.1587908537486719e-06, 1.2160475892285052e-06, 1.2153260351104628e-06, 1.2574448159544512e-06, 1.2593116999986315e-06, 1.2962375584330793e-06, 1.2857117651167625e-06, 1.2691656041040135e-06, 1.2626802247593462e-06, 1.275875693603926e-06, 1.2625052607160927e-06, 1.301089696426061e-06, 1.3152426682998858e-06, 1.3631174462196732e-06, 1.3875137321000303e-06, 1.3777217061163225e-06, 1.4111326111430702e-06, 1.4073843398624116e-06, 1.4088593453769654e-06, 1.4896259991863708e-06, 1.511542645208205e-06, 1.5620876183675136e-06, 1.619904261523126e-06, 1.61999594183726e-06, 1.6646635166190599e-06, 1.6854376261627685e-06, 1.7138500782363865e-06, 1.7398133910059447e-06, 1.7291554935841954e-06, 1.741828246589908e-06, 1.8179509067652231e-06, 1.866785380246126e-06, 1.8378740540876087e-06, 1.7674734473465442e-06, 1.6831261291372357e-06, 1.6978271202918092e-06, 1.6575206538098947e-06, 1.5743737549200887e-06, 1.532044767113153e-06, 1.5385561645026819e-06, 1.5060589118677723e-06, 1.5414349588484453e-06, 1.5182454912324568e-06, 1.5335329440599059e-06, 1.5549867709653751e-06, 1.552725718413837e-06, 1.5585752635161043e-06, 1.5746916882822655e-06, 1.5796479634186004e-06, 1.5836502110947289e-06, 1.5779810707629492e-06, 1.5606979267041815e-06, 1.534523611163812e-06, 1.5208340755634708e-06, 1.499801994343995e-06, 1.4808296262864523e-06, 1.47266150309276e-06, 1.4523221644984524e-06, 1.4616845354404567e-06, 1.4611902737929735e-06, 1.4737531403495398e-06, 1.485535741656869e-06, 1.5147164081749257e-06, 1.54052195609568e-06, 1.5943416298926292e-06, 1.6325098580896987e-06, 1.7057905746956488e-06, 1.7281909582119885e-06, 1.7609397998187757e-06, 1.7901251112562022e-06, 1.7950201741509124e-06, 1.761491424596378e-06, 1.7277910079168838e-06, 1.664995904450604e-06, 1.608743007506876e-06, 1.5386886908735114e-06, 1.4338057618650574e-06, 1.3576310818409963e-06, 1.2922858364358295e-06, 1.2181709182966318e-06, 1.1304436904018594e-06, 1.057556330254426e-06, 1.0186977630967573e-06, 9.988291367335478e-07, 9.318915366358331e-07, 9.007659238185235e-07, 9.004682916773683e-07, 9.386771872803885e-07, 9.736134448498239e-07, 1.042423913791676e-06, 1.0782893501267869e-06, 1.1603656032223495e-06, 1.2053438543565183e-06, 1.2353265447018202e-06, 1.2535084010778519e-06];
+
+            // Generate years 1800-2019
+            yearData = [];
+            for (let year = 1800; year <= 2019; year++) {
+                yearData.push(year);
+            }
+
+            statusDisplay.textContent = `Ready to explore 220 years of literary history`;
+            totalPointsDisplay.textContent = mateoData.length;
+            startStopBtn.disabled = false;
+            startStopBtn.textContent = '▶ Start';
+            currentValueDisplay.textContent = mateoData[0].toExponential(3);
+
+            drawChart();
+        }
+
+        // Draw chart
+        function drawChart() {
+            // Set canvas size
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            const padding = 50;
+            const width = canvas.width - 2 * padding;
+            const height = canvas.height - 2 * padding;
+
+            // Clear canvas
+            ctx.fillStyle = '#f5f5f5';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Find min and max values
+            const minValue = Math.min(...mateoData);
+            const maxValue = Math.max(...mateoData);
+            const valueRange = maxValue - minValue;
+
+            // Draw axes
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, canvas.height - padding);
+            ctx.lineTo(canvas.width - padding, canvas.height - padding);
+            ctx.stroke();
+
+            // Draw labels
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'right';
+            ctx.fillText(maxValue.toExponential(2), padding - 10, padding + 5);
+            ctx.fillText(minValue.toExponential(2), padding - 10, canvas.height - padding + 5);
+
+            ctx.textAlign = 'center';
+            ctx.fillText('Frequency of "Mateo" in Literature (1800-2019)', canvas.width / 2, 25);
+
+            // Add year labels
+            ctx.font = '11px Arial';
+            ctx.fillText('1800', padding, canvas.height - padding + 20);
+            ctx.fillText('1900', padding + width / 2, canvas.height - padding + 20);
+            ctx.fillText('2019', canvas.width - padding, canvas.height - padding + 20);
+
+            // Draw data line
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+
+            for (let i = 0; i < mateoData.length; i++) {
+                const x = padding + (i / (mateoData.length - 1)) * width;
+                const y = canvas.height - padding - ((mateoData[i] - minValue) / valueRange) * height;
+
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+
+            // Draw current position indicator
+            if (isPlaying && currentIndex < mateoData.length) {
+                const x = padding + (currentIndex / (mateoData.length - 1)) * width;
+                const y = canvas.height - padding - ((mateoData[currentIndex] - minValue) / valueRange) * height;
+
+                ctx.fillStyle = '#ff4444';
+                ctx.beginPath();
+                ctx.arc(x, y, 6, 0, 2 * Math.PI);
+                ctx.fill();
+
+                // Draw vertical line
+                ctx.strokeStyle = 'rgba(255, 68, 68, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x, padding);
+                ctx.lineTo(x, canvas.height - padding);
+                ctx.stroke();
+            }
+        }
+
+        // Update audio parameters based on word frequency value
+        function updateAudio() {
+            if (currentIndex >= mateoData.length) {
+                stopCompletely();
+                statusDisplay.textContent = '✓ Sonification complete - Played all 220 years';
+                setTimeout(() => {
+                    statusDisplay.textContent = 'Ready to explore 220 years of literary history';
+                }, 4000);
+                return;
+            }
+
+            const freqValue = mateoData[currentIndex];
+            const currentYear = yearData[currentIndex];
+            const minFreq = Math.min(...mateoData);
+            const maxFreq = Math.max(...mateoData);
+            const normalized = (freqValue - minFreq) / (maxFreq - minFreq);
+
+            const currentTime = audioContext.currentTime;
+            const rampTime = updateRate / 1000; // Convert ms to seconds
+
+            // Map word frequency to carrier frequency (200 Hz to 1000 Hz)
+            const targetFrequency = 200 + normalized * 800;
+            carrier.frequency.exponentialRampToValueAtTime(targetFrequency, currentTime + rampTime);
+
+            // Map word frequency to modulation index (50 to 400)
+            const targetModIndex = 50 + normalized * 350;
+            modulatorGain.gain.exponentialRampToValueAtTime(targetModIndex, currentTime + rampTime);
+
+            // Map word frequency to modulator frequency (2 Hz to 12 Hz)
+            const targetModFreq = 2 + normalized * 10;
+            modulator.frequency.exponentialRampToValueAtTime(targetModFreq, currentTime + rampTime);
+
+            // Update displays
+            currentValueDisplay.textContent = freqValue.toExponential(3);
+            currentYearDisplay.textContent = currentYear;
+            currentIndexDisplay.textContent = currentIndex + 1;
+
+            drawChart();
+
+            currentIndex++;
+        }
+
+        // Start playback
+        function start() {
+            initAudio();
+
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+
+            // Fade in
+            masterGain.gain.exponentialRampToValueAtTime(0.3, audioContext.currentTime + 0.1);
+
+            isPlaying = true;
+            startStopBtn.textContent = '⏸ Pause';
+            statusDisplay.textContent = '🎵 Sonifying 220 years of "Mateo" in literature...';
+            statusDisplay.classList.add('playing');
+
+            updateInterval = setInterval(updateAudio, updateRate);
+        }
+
+        // Stop playback (pause)
+        function stop() {
+            if (audioContext) {
+                masterGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+            }
+
+            isPlaying = false;
+            startStopBtn.textContent = '▶ Start';
+            statusDisplay.textContent = 'Paused - Click Start to resume';
+            statusDisplay.classList.remove('playing');
+
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+
+            currentIndex = 0;
+            currentValueDisplay.textContent = mateoData[0].toExponential(3);
+            currentYearDisplay.textContent = '1800';
+            currentIndexDisplay.textContent = '0';
+            drawChart();
+        }
+
+        // Completely stop playback (on completion)
+        function stopCompletely() {
+            if (audioContext) {
+                // Fade out and then set to zero
+                masterGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+                setTimeout(() => {
+                    if (masterGain && audioContext) {
+                        masterGain.gain.setValueAtTime(0, audioContext.currentTime);
+                    }
+                }, 150);
+            }
+
+            isPlaying = false;
+            startStopBtn.textContent = '▶ Start';
+            statusDisplay.classList.remove('playing');
+
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+
+            currentIndex = 0;
+            currentValueDisplay.textContent = mateoData[0].toExponential(3);
+            currentYearDisplay.textContent = '1800';
+            currentIndexDisplay.textContent = '0';
+            drawChart();
+        }
+
+        // Event listeners
+        startStopBtn.addEventListener('click', () => {
+            if (isPlaying) {
+                stop();
+            } else {
+                start();
+            }
+        });
+
+        updateRateSlider.addEventListener('input', (e) => {
+            updateRate = parseInt(e.target.value);
+            rateValueDisplay.textContent = updateRate;
+
+            // Update interval if playing
+            if (isPlaying) {
+                clearInterval(updateInterval);
+                updateInterval = setInterval(updateAudio, updateRate);
+            }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            drawChart();
+        });
+
+        // Initialize
+        loadMateoData();
+    </script>
+</body>
+</html>

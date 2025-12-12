@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Etude II - Mateo - A Data Sonification</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../theme.css">
+    <script src="https://cdn.jsdelivr.net/npm/webchuck/+esm" type="module"></script>
+    <style>
+        .nav-home {
+            position: fixed;
+            top: var(--spacing-md);
+            left: var(--spacing-md);
+            padding: 10px 20px;
+            background: var(--color-background);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            color: var(--color-text);
+            text-decoration: none;
+            font-size: 0.9em;
+            font-weight: var(--font-weight-medium);
+            transition: all var(--transition-fast);
+            z-index: 1000;
+        }
+        .nav-home:hover {
+            background: var(--color-text);
+            color: var(--color-background);
+            border-color: var(--color-text);
+        }
+        body {
+            padding-top: var(--spacing-2xl);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: var(--spacing-sm);
+        }
+        .subtitle {
+            text-align: center;
+            color: var(--color-text-muted);
+            margin-bottom: var(--spacing-xl);
+            font-size: 1.1em;
+            font-style: italic;
+        }
+        #controls {
+            margin: var(--spacing-lg) 0;
+            padding: var(--spacing-xl);
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-subtle);
+            text-align: center;
+        }
+        #status {
+            text-align: center;
+            margin: var(--spacing-md) 0;
+            padding: var(--spacing-sm);
+            background: var(--color-surface-muted);
+            border-radius: var(--radius-sm);
+            color: var(--color-text-muted);
+            font-weight: var(--font-weight-medium);
+            min-height: 20px;
+        }
+        #info {
+            margin-top: var(--spacing-xl);
+            padding: var(--spacing-lg);
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-left: 4px solid var(--color-accent);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-subtle);
+            line-height: 1.6;
+        }
+        .section-label {
+            color: var(--color-accent);
+            font-weight: var(--font-weight-semibold);
+            margin-top: var(--spacing-md);
+            font-size: 1.1em;
+        }
+        .data-source {
+            margin-top: var(--spacing-lg);
+            padding: var(--spacing-md);
+            background: var(--color-surface-muted);
+            border-radius: var(--radius-md);
+            font-size: 0.9em;
+            border: 1px solid var(--color-border);
+        }
+        .data-source strong {
+            color: var(--color-text);
+            font-weight: var(--font-weight-semibold);
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="nav-home">← Home</a>
+    <div class="text-muted" style="font-size: 0.9em; margin-bottom: 8px;">Etude II</div>
+    <h1>MATEO</h1>
+    <div class="subtitle">The History of a Name</div>
+
+    <div id="controls">
+        <button id="startBtn">▶ Play Sonification</button>
+        <button id="stopBtn">■ Stop</button>
+    </div>
+
+    <div id="status">Ready to play</div>
+
+    <div id="info">
+        <strong style="font-size: 1.2em; font-weight: var(--font-weight-semibold);">About the Piece:</strong>
+        <p>This sonification transforms 220 years of the name "Mateo" in published literature (1800-2019) into a clear melodic representation. Each year becomes a single note, with pitch directly mapped to the name's frequency in literature.</p>
+
+        <div class="section-label">Sonification Mapping</div>
+        <p><strong>Pitch:</strong> Data values map to a 3-octave major pentatonic scale (C-D-E-G-A spanning 130Hz to 1318Hz). Higher pitches indicate greater frequency of "Mateo" in published works. The melodic contour directly represents the exponential growth from the 1800s through 2019.</p>
+
+        <p><strong>Amplitude:</strong> Volume also reflects data values - louder notes indicate periods when "Mateo" appeared more frequently in literature. This dual mapping (pitch + loudness) reinforces the growth pattern.</p>
+
+        <p><strong>Timbre:</strong> Bell-like FM synthesis (3:1 carrier-to-modulator ratio) with a fixed modulation index creates a consistent mallet-like sound. Ping pong delay effects (800ms left, 1000ms right) create wide stereo spatial depth, with echoes bouncing between left and right channels at different times.</p>
+
+        <p><strong>Temporal Markers:</strong> Every 50 years (1850, 1900, 1950, 2000), a pure sine wave accent plays C6 (1046 Hz) with reverb - marking the top of the pentatonic range. These markers provide temporal reference points to orient the listener through the 220-year timeline.</p>
+
+        <p style="margin-top: 20px;"><em style="color: #ce9178;">Duration: ~35 seconds | Data points: 220 annual measurements | Scale: 3-octave C Major Pentatonic (18 notes)</em></p>
+
+        <div class="data-source">
+            <strong>Data Source:</strong> Google Books Ngram Viewer (corpus: English 2019, smoothing: 3)<br>
+            <strong>Synthesis Method:</strong> FM synthesis (3:1 ratio, index 1.5) with ADSR envelope and ping pong delay<br>
+            <strong>Mapping:</strong> Data → Pitch (pentatonic scale) + Amplitude (0.4-1.0 velocity range)
+        </div>
+    </div>
+
+    <script type="module">
+        import { Chuck } from "https://cdn.jsdelivr.net/npm/webchuck/+esm";
+
+        let theChuck;
+        let isPlaying = false;
+
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const statusDiv = document.getElementById('status');
+
+        async function init() {
+            statusDiv.textContent = 'Initializing WebChuck...';
+            theChuck = await Chuck.init([]);
+            statusDiv.textContent = 'Ready to play';
+            console.log("WebChuck initialized");
+        }
+
+        startBtn.addEventListener('click', async () => {
+            if (!isPlaying) {
+                // Always reinitialize to ensure clean state
+                if (theChuck) {
+                    await theChuck.clearChuckInstance();
+                }
+                await init();
+
+                isPlaying = true;
+                startBtn.disabled = true;
+                statusDiv.textContent = '♪ Playing sonification...';
+
+                const chuckCode = `
+// Google Ngram data for "Mateo" (1800-2019, 220 years)
+// Frequency values represent occurrences per million words
+[4.292891842005986e-08, 4.019382462416843e-08, 4.919577352898349e-08, 4.3220805728034454e-08, 3.964388055927819e-08, 2.8612572374900732e-08, 3.395845522240799e-08, 3.5504346002872874e-08, 4.121053606301725e-08, 4.6026012080955884e-08, 4.6498575783411004e-08, 6.138006433279283e-08, 6.61622760387916e-08, 6.56470467827067e-08, 6.396722580197839e-08, 6.702239918610076e-08, 6.034952791468737e-08, 6.533517193929583e-08, 5.644775973629683e-08, 6.383883948452812e-08, 6.312411824995121e-08, 6.808820428107407e-08, 6.550359594419725e-08, 5.994295904088176e-08, 5.638239183472901e-08, 7.216042011545401e-08, 1.0607045197730258e-07, 1.2373185904428802e-07, 1.3966846574524944e-07, 2.2910212089349053e-07, 2.423137398669236e-07, 2.679746557987528e-07, 2.6204765341779943e-07, 2.3133557444257997e-07, 2.203367119234047e-07, 2.0292453888665867e-07, 1.36086922302476e-07, 1.322462449390319e-07, 1.0996972577004271e-07, 9.851018794344262e-08, 9.441706692671557e-08, 9.22048875346653e-08, 9.601260332812802e-08, 7.525760839907239e-08, 1.1874924611886075e-07, 1.3497191072734234e-07, 1.6056246059698814e-07, 1.7363973877796264e-07, 2.2785568631888964e-07, 2.2666253991181812e-07, 2.441818409693042e-07, 2.3370438892048435e-07, 2.291971686726616e-07, 2.254447884248683e-07, 2.8928779219735847e-07, 2.886443693585404e-07, 3.406042310416524e-07, 3.961819174946868e-07, 4.319156273270762e-07, 5.572319951495177e-07, 6.079227148347854e-07, 5.926729816759949e-07, 5.843144208483864e-07, 6.248456827506743e-07, 5.648890066822787e-07, 6.026628714802687e-07, 4.98182649672734e-07, 5.294160213712271e-07, 4.904909230520258e-07, 5.272761874104097e-07, 4.712652444790625e-07, 5.180317300203439e-07, 4.878719112509446e-07, 5.269637841008392e-07, 4.6394617113167313e-07, 5.314454572921282e-07, 5.020703213176603e-07, 5.143085672898451e-07, 5.182227320282047e-07, 4.931004217009363e-07, 5.079281411976158e-07, 5.341574974084194e-07, 5.330026908723084e-07, 5.861141687546478e-07, 6.289727504541329e-07, 6.681773397433841e-07, 7.186681289437859e-07, 7.3335804375217e-07, 7.835790419059257e-07, 7.67529789819881e-07, 7.435651566213762e-07, 7.16127431132918e-07, 6.923418871857783e-07, 6.50612296989753e-07, 6.270869903346465e-07, 5.762595378655533e-07, 5.964712223820763e-07, 6.230869270698999e-07, 7.728121269272898e-07, 7.914601058343708e-07, 8.292607763645979e-07, 8.52051511758743e-07, 9.00886464348462e-07, 9.476469894512515e-07, 9.531500089516547e-07, 8.568769577063254e-07, 8.542644179345058e-07, 8.558801433926939e-07, 8.554556529816182e-07, 8.685278852941078e-07, 8.484003696399409e-07, 8.525428256689338e-07, 8.98625947749159e-07, 9.438983040256841e-07, 1.0006385845632134e-06, 1.0554101176499638e-06, 1.0659932497349343e-06, 1.0541176119919067e-06, 1.0749486136774067e-06, 1.0433173624083532e-06, 1.0588078924099266e-06, 1.0451143452883116e-06, 1.0610105911317597e-06, 1.0655512759123148e-06, 1.1251031537540257e-06, 1.1587908537486719e-06, 1.2160475892285052e-06, 1.2153260351104628e-06, 1.2574448159544512e-06, 1.2593116999986315e-06, 1.2962375584330793e-06, 1.2857117651167625e-06, 1.2691656041040135e-06, 1.2626802247593462e-06, 1.275875693603926e-06, 1.2625052607160927e-06, 1.301089696426061e-06, 1.3152426682998858e-06, 1.3631174462196732e-06, 1.3875137321000303e-06, 1.3777217061163225e-06, 1.4111326111430702e-06, 1.4073843398624116e-06, 1.4088593453769654e-06, 1.4896259991863708e-06, 1.511542645208205e-06, 1.5620876183675136e-06, 1.619904261523126e-06, 1.61999594183726e-06, 1.6646635166190599e-06, 1.6854376261627685e-06, 1.7138500782363865e-06, 1.7398133910059447e-06, 1.7291554935841954e-06, 1.741828246589908e-06, 1.8179509067652231e-06, 1.866785380246126e-06, 1.8378740540876087e-06, 1.7674734473465442e-06, 1.6831261291372357e-06, 1.6978271202918092e-06, 1.6575206538098947e-06, 1.5743737549200887e-06, 1.532044767113153e-06, 1.5385561645026819e-06, 1.5060589118677723e-06, 1.5414349588484453e-06, 1.5182454912324568e-06, 1.5335329440599059e-06, 1.5549867709653751e-06, 1.552725718413837e-06, 1.5585752635161043e-06, 1.5746916882822655e-06, 1.5796479634186004e-06, 1.5836502110947289e-06, 1.5779810707629492e-06, 1.5606979267041815e-06, 1.534523611163812e-06, 1.5208340755634708e-06, 1.499801994343995e-06, 1.4808296262864523e-06, 1.47266150309276e-06, 1.4523221644984524e-06, 1.4616845354404567e-06, 1.4611902737929735e-06, 1.4737531403495398e-06, 1.485535741656869e-06, 1.5147164081749257e-06, 1.54052195609568e-06, 1.5943416298926292e-06, 1.6325098580896987e-06, 1.7057905746956488e-06, 1.7281909582119885e-06, 1.7609397998187757e-06, 1.7901251112562022e-06, 1.7950201741509124e-06, 1.761491424596378e-06, 1.7277910079168838e-06, 1.664995904450604e-06, 1.608743007506876e-06, 1.5386886908735114e-06, 1.4338057618650574e-06, 1.3576310818409963e-06, 1.2922858364358295e-06, 1.2181709182966318e-06, 1.1304436904018594e-06, 1.057556330254426e-06, 1.0186977630967573e-06, 9.988291367335478e-07, 9.318915366358331e-07, 9.007659238185235e-07, 9.004682916773683e-07, 9.386771872803885e-07, 9.736134448498239e-07, 1.042423913791676e-06, 1.0782893501267869e-06, 1.1603656032223495e-06, 1.2053438543565183e-06, 1.2353265447018202e-06, 1.2535084010778519e-06] @=> float mateoData[];
+
+// Global data pointer
+0 => int dataPtr;
+
+// Pentatonic scale - 3 octaves (C major pentatonic: C D E G A)
+[130.81, 146.83, 164.81, 196.00, 220.00,   // Octave 1
+ 261.63, 293.66, 329.63, 392.00, 440.00,   // Octave 2
+ 523.25, 587.33, 659.25, 783.99, 880.00,   // Octave 3
+ 1046.50, 1174.66, 1318.51] @=> float scale[];  // Start of Octave 4
+
+// FM Voice for mallet sound - using simple parameters
+class FMVoice {
+    SinOsc mod => blackhole;
+    SinOsc car => ADSR env;
+
+    fun void connect(UGen target) {
+        env => target;
+    }
+
+    fun void playNote(float freq, float velocity, dur duration) {
+        // Set frequencies
+        freq => car.freq;
+        freq * 3.0 => mod.freq;  // 3:1 ratio for bell-like
+
+        // Moderate modulation index
+        1.5 => float index;
+
+        // Start the FM
+        spork ~ this.fmLoop(freq, index, duration);
+
+        // Set gain
+        0.5 * velocity => car.gain;
+
+        // Short, percussive envelope - attack, decay to zero
+        env.set(1::ms, 50::ms, 0.0, 20::ms);
+        env.keyOn();
+
+        // Wait then release
+        60::ms => now;
+        env.keyOff();
+        30::ms => now;  // Short release tail
+    }
+
+    fun void fmLoop(float freq, float index, dur duration) {
+        now + duration + 100::ms => time end;
+        while (now < end) {
+            freq + (index * mod.last()) => car.freq;
+            1::samp => now;
+        }
+    }
+}
+
+// Accent voice - sine wave for pure, clear high note
+class AccentVoice {
+    SinOsc osc => ADSR env;
+
+    fun void connect(UGen target) {
+        env => target;
+    }
+
+    fun void playAccent(float freq, dur duration) {
+        freq => osc.freq;
+        0.4 => osc.gain;
+
+        // Longer, more sustained envelope for accent with slow fade
+        5::ms => dur attack;
+        duration * 0.4 => dur decay;
+        0.4 => float sustain;
+        800::ms => dur release;  // Long, slow release
+
+        env.set(attack, decay, sustain, release);
+        env.keyOn();
+
+        duration => now;
+        env.keyOff();
+        release => now;
+    }
+}
+
+// Create voice pool - FEWER voices to reduce overlap
+FMVoice voices[3];
+0 => int voiceIndex;
+
+// Create accent voice for 50-year markers
+AccentVoice accent;
+
+// Simpler ping pong delay - avoid feedback loops that might cause issues
+Gain mixer;
+Gain accentMixer;  // Separate mixer for accent
+
+// Left and right delay lines
+mixer => Delay delayL => Gain gainL => dac.left;
+mixer => Delay delayR => Gain gainR => dac.right;
+
+// Also send dry signal to both channels
+mixer => Gain dry => dac;
+
+// Delay times
+800::ms => delayL.max => delayL.delay;
+1000::ms => delayR.max => delayR.delay;  // Slightly offset for ping pong
+
+// Delay gains
+0.4 => gainL.gain;
+0.4 => gainR.gain;
+
+// Dry signal
+0.6 => dry.gain;
+
+// Mixer gain
+0.3 => mixer.gain;
+
+// Connect voices
+for (0 => int i; i < voices.cap(); i++) {
+    voices[i].connect(mixer);
+}
+
+// Connect accent voice with reverb
+accent.connect(accentMixer);
+accentMixer => NRev reverb => dac;
+0.08 => reverb.mix;  // Light reverb
+0.28 => accentMixer.gain;  // 20% lower than 0.35
+
+// Find min and max for normalization
+mateoData[0] => float minVal;
+mateoData[0] => float maxVal;
+for (0 => int i; i < mateoData.size(); i++) {
+    if (mateoData[i] < minVal) mateoData[i] => minVal;
+    if (mateoData[i] > maxVal) mateoData[i] => maxVal;
+}
+maxVal - minVal => float range;
+
+// Single clear sonification: Pitch represents frequency of "Mateo"
+// Higher pitch = more frequent in literature
+fun void sonification() {
+    <<< "Sonification: Pitch = Frequency of 'Mateo' in Literature" >>>;
+
+    // High C (one octave below the highest C)
+    1046.50 => float accentNote;  // C6
+
+    for (0 => int i; i < mateoData.size(); i++) {
+        i => dataPtr;
+
+        // Check if this is a 50-year marker (starting from year 0 = 1800)
+        // Year markers: 1850 (i=50), 1900 (i=100), 1950 (i=150), 2000 (i=200)
+        if (i % 50 == 0 && i > 0) {
+            <<< "50-year marker:", 1800 + i >>>;
+            // Play accent note
+            spork ~ accent.playAccent(accentNote, 400::ms);
+        }
+
+        // Normalize data
+        (mateoData[dataPtr] - minVal) / range => float normalized;
+
+        // Map to pentatonic scale - higher data value = higher pitch
+        (normalized * (scale.size() - 1)) $ int => int scaleIdx;
+        scale[scaleIdx] => float noteFreq;
+
+        // Velocity also reflects data (louder = more frequent)
+        0.4 + normalized * 0.6 => float velocity;
+
+        // Play note
+        spork ~ voices[voiceIndex].playNote(noteFreq, velocity, 90::ms);
+        (voiceIndex + 1) % voices.cap() => voiceIndex;
+
+        // Gap ensures notes don't heavily overlap (note is 90ms total)
+        150::ms => now;
+    }
+}
+
+// Main execution
+sonification();
+
+// Wait for delays to naturally decay (longest delay is 1000ms)
+// Allow multiple repetitions to fade naturally
+3::second => now;
+
+<<< "Sonification complete" >>>;
+`;
+
+                try {
+                    await theChuck.runCode(chuckCode);
+                    console.log("Sonification started");
+
+                    // Re-enable button after duration (220 * 150ms + 3s natural decay = ~36s)
+                    setTimeout(() => {
+                        startBtn.disabled = false;
+                        isPlaying = false;
+                        statusDiv.textContent = 'Sonification complete ✓';
+                        setTimeout(() => {
+                            statusDiv.textContent = 'Ready to play';
+                        }, 3000);
+                    }, 36000);
+
+                } catch (error) {
+                    console.error("Error running Chuck code:", error);
+                    startBtn.disabled = false;
+                    isPlaying = false;
+                }
+            }
+        });
+
+        stopBtn.addEventListener('click', async () => {
+            if (theChuck && isPlaying) {
+                statusDiv.textContent = 'Stopping...';
+                await theChuck.clearChuckInstance();
+                await init();
+                isPlaying = false;
+                startBtn.disabled = false;
+                statusDiv.textContent = 'Stopped';
+                setTimeout(() => {
+                    statusDiv.textContent = 'Ready to play';
+                }, 2000);
+                console.log("Sonification stopped");
+            }
+        });
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>

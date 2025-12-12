@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etude V - hw4 - logistic map</title>
+    <link rel="stylesheet" href="../theme.css">
+    <style>
+        .nav-home {
+            position: fixed;
+            top: var(--spacing-md);
+            left: var(--spacing-md);
+            padding: 10px 20px;
+            background: var(--color-background);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            color: var(--color-text);
+            text-decoration: none;
+            font-size: 0.9em;
+            font-weight: var(--font-weight-medium);
+            transition: all var(--transition-fast);
+            z-index: 1000;
+        }
+        .nav-home:hover {
+            background: var(--color-text);
+            color: var(--color-background);
+            border-color: var(--color-text);
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            line-height: 1.6;
+            color: var(--color-text);
+            background: var(--color-surface-muted);
+            padding: var(--spacing-xl) var(--spacing-md);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--color-background);
+            padding: var(--spacing-xl);
+            border: 1px solid var(--color-border);
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: var(--font-weight-medium);
+            margin-bottom: var(--spacing-md);
+            color: var(--color-text);
+        }
+
+        .intro {
+            margin-bottom: var(--spacing-xl);
+            color: var(--color-text-muted);
+            font-size: 15px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-lg);
+            margin: var(--spacing-xl) 0;
+        }
+
+        .card {
+            border: 1px solid var(--color-border);
+            padding: var(--spacing-lg) var(--spacing-lg);
+            text-align: center;
+            transition: border-color var(--transition-fast);
+        }
+
+        .card:hover {
+            border-color: var(--color-text);
+        }
+
+        .card h2 {
+            font-size: 16px;
+            font-weight: 500;
+            margin: 15px 0;
+            color: #1a1a1a;
+        }
+
+        .card p {
+            color: #4a4a4a;
+            font-size: 14px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .card a {
+            color: #1a1a1a;
+            text-decoration: none;
+            border-bottom: 1px solid #1a1a1a;
+            transition: opacity 0.2s;
+            font-size: 14px;
+        }
+
+        .card a:hover {
+            opacity: 0.6;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 20px;
+            height: 32px;
+        }
+
+        .note {
+            background: #f5f5f5;
+            padding: 20px;
+            margin: 30px 0;
+            font-size: 14px;
+            color: #4a4a4a;
+            border-left: 2px solid #1a1a1a;
+        }
+
+        footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 13px;
+            color: #999;
+        }
+
+        @media (max-width: 768px) {
+            .cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="nav-home">← Home</a>
+    <div class="container">
+        <div class="text-muted" style="font-size: 0.9em; margin-bottom: 8px;">Etude V</div>
+        <h1>homework 4</h1>
+
+        <p class="intro">this is a webchuck instrument using mouse gestures to control chaotic synthesis. the logistic map generates frequency patterns while you move the mouse. you control the chaos parameter but can't fully predict the output.</p>
+
+        <div class="cards">
+            <div class="card">
+                <h2>project description</h2>
+                <p>detailed documentation of the project goals, implementation approach, and technical specifications.</p>
+                <a href="project.txt" download>view description</a>
+            </div>
+
+            <div class="card">
+                <h2>example recording</h2>
+                <p>audio demonstration of the chuck program in action, showcasing the implemented features and sound design.</p>
+                <a href="mouse-synth.wav" download>download audio</a>
+                <audio controls>
+                    <source src="mouse-synth.wav" type="audio/wav">
+                </audio>
+            </div>
+
+            <div class="card">
+                <h2>chuck source code</h2>
+                <p>custom chuck implementation with detailed comments explaining the audio synthesis and processing techniques used.</p>
+                <a href="project.ck" download>download code</a>
+                <br><br>
+                <a href="https://chuck.stanford.edu/ide/?code=eNqtV1tv2zYUftev4F4KqUnkW7xucRNgdS8p0GyB3S7NU8DIjEVEphSSih0M3m%2FfOSR1tWx02ARYNs%2F5zo08%2FEj3euQyXbF1Kh%2FJKTkhM0aTE81XjMxfhI6Z4oqsuY7Jl3TJleYRuaKZ1%2BuRqzRXrKcljR4zuiBLpnQuaUK4yHJtTaKYpmiRUa2ZFIARTFLNU%2BGhh8vP78lng54znWfeJV%2BQmE%2Fw%2B0otyUotJ57XJ%2BcX4FOTBXvmEQMJf%2FB%2FinmYZkyYHHyrCQKyYiHbcO0HgHpIUqrJCgHfj%2B33rfu%2BmXj9cIx%2Brbo5vG0OAYy51qsn04Qq5UX4rhR%2FeQQeG%2FZuc0zu5MRKaKJYUQRXUCp4NIpckOcUalZM%2B9YOzOwPGTh%2F%2BGzQ%2Bm4zKQXSCGQl0DK3Iax7FG2rINYl5Pjo193iPBqDxsQVWv9OktcQNYC3Pwj70Bo4aGcCCwcLW4i2u5XN%2FI6KGgW0jSSrTcjeedh6YFdO%2FopmEw9eIZr2wzfHZBSOA7t0v%2BULnpI5XwrozmlMufCuqRhCVwoAwDuEPhV%2B3xT3%2B4w9QwbPX9iDxvGCRoV6UmEHBns9mzr0jC%2FjJnyAwZ2fcMU3kFT%2FV5AV4LrMm3Pxh4qI4gJ9mLyuc%2BgaFGZ5UgrnT9LgnmQp%2Bio5irTkFYquDYquSxFOwwfxzBLYNG6zjcZnZytlcs4lybMF1WwGH0xHs4zkgusXVJd2D5I9wQBl9wns%2BjhNAF2Bhw00XWWHwKMGGPjmXrJD%2BNMGHolF7cI97FMQGYtQsA3shbpo2CEbdchOncxzJYcwRYa2%2FGqeYN1siXuUZUl79EUJe9TecNi3GRU5aCqXuLn74dCwk4teiEeWs0q3Fdx4qdIpFNgTcxhoMk1FlEvJgJ%2BuZRoxpZjyVIYnwt%2BuMz7KdPXJMDxTyBJN7RSD7oqhC3mSUJ1Ko%2FQGZ2csNS0u0rVNwPl0x4CLzsXSK9mgK77jhHXME%2BYj99VZIuZVhEJmkXBoSBY9%2B3CwBHULR4YgDrkyR8pValZkB4UPwlREE7aY5lKl8nv9IGmDLXG2TW7rh82OzTD8hRwR37oE9h2EQ0M3jkd3g7TW3JdBh9e5XoQrnT5Yv7fg9xTDjH6u%2Bb6nCmaaPe2GaDahXwCDJnLbGDE898p5fZdrnYr36XrPtDogrFQUk%2FNzMugC4YMkvAQSR%2FYMdjPd%2FsuMvmX%2FVz6D%2F5jPTcxYcqjzHHLBEk1v96VTIUiPDHD3H9WuMl0W3PXEDbnAfg2Io8Ifs3lLTozRScuq06wwOrKBetDr%2Far9gNH2RgMduTgnWM%2BrV4gkb8%2Btk%2B5pwKfBkMbDa3AwDrqDbH946bbVBQQobOouudfukvupuuS2SMzR5EH2cneYmV9uarhlwsWsljRC3GWunDqD%2FpMmOatdCluU71cgmIihYaZmz1YnUEmh9UorPifvqHgk3wxctcts0P7BYgtWsSUe4iG3lG1go2Oqetswq6n1JBwxIQb3zf4gHXQG164CMe5GwC3MIgbhm24EXMosYhgO9vig6wJx2kQ0UjX0YvsX2Oarqca3RR3jlghaiR%2FED5p4LOMgftjEY1EH8aOWfyjxIP7U4ksDuCUoxHZ1oDWFrSYEXBLIx1xE5UazS135b%2F2jeika74rqOIRZ9TeQztis%2F4shhlG9Y4rGQnaHjw8CV5T5M3SEiBqBlfh%2BOBiT13WJ%2B4tkxlvvH%2BMrS6I%3D" target="_blank">run in webchuck</a>
+            </div>
+        </div>
+
+        <div class="note">
+            the logistic map is x(n+1) = r·x(n)·(1-x(n)). different r values create different behaviors. below 3.0 you get stable tones. around 3.0-3.57 there's period doubling. above 3.57 it goes chaotic. moving the mouse left to right lets you explore these different states in real time.
+        </div>
+
+        <p>the synthesis uses 5 oscillators with slight detuning and stereo reverb. everything updates smoothly at 48khz with envelope ramping to avoid clicks. three processes run in parallel: one reads mouse input, one updates the chaos, and one controls the oscillators.</p>
+
+        <p>i'm thinking of this as exploring the boundary between control and unpredictability. you set the parameters but the logistic map generates the actual patterns. it works well as an improvisation tool.</p>
+
+        <footer>
+            hw4 / webchuck project
+        </footer>
+    </div>
+</body>
+</html>

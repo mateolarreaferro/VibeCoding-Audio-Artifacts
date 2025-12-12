@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etude III - Auditory Stream Segregation - Isorhythmic Pattern</title>
+    <link rel="stylesheet" href="../theme.css">
+    <style>
+        .nav-home {
+            position: fixed;
+            top: var(--spacing-md);
+            left: var(--spacing-md);
+            padding: 10px 20px;
+            background: var(--color-background);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            color: var(--color-text);
+            text-decoration: none;
+            font-size: 0.9em;
+            font-weight: var(--font-weight-medium);
+            transition: all var(--transition-fast);
+            z-index: 1000;
+        }
+        .nav-home:hover {
+            background: var(--color-text);
+            color: var(--color-background);
+            border-color: var(--color-text);
+        }
+        body {
+            padding-top: var(--spacing-2xl);
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--color-background);
+            padding: var(--spacing-xl);
+        }
+        h1 {
+            text-align: center;
+            margin-top: 0;
+            color: var(--color-text);
+        }
+        .description {
+            background: var(--color-surface);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            line-height: 1.6;
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+        }
+        .controls {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        button {
+            background: var(--color-text);
+            border: 1px solid var(--color-text);
+            color: var(--color-background);
+            padding: 15px 35px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+        button:hover:not(:disabled) {
+            background: var(--color-background);
+            color: var(--color-text);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .slider-container {
+            margin: 30px 0;
+            padding: 20px;
+            background: var(--color-surface);
+            border-radius: 10px;
+            border: 1px solid var(--color-border);
+        }
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: var(--color-text);
+        }
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: var(--color-surface-muted);
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--color-text);
+            cursor: pointer;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--color-text);
+            cursor: pointer;
+            border: none;
+        }
+        #visualizer {
+            width: 100%;
+            height: 200px;
+            background: var(--color-surface-muted);
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid var(--color-border);
+        }
+        .prompt-log {
+            margin-top: 30px;
+            padding: 20px;
+            background: var(--color-surface);
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.8;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+        }
+        .prompt-log h3 {
+            margin-top: 0;
+            color: var(--color-text);
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="nav-home">← Home</a>
+    <div class="container">
+        <div class="text-muted" style="font-size: 0.9em; margin-bottom: 8px;">Etude III-LLM</div>
+        <h1>🎵 Auditory Stream Segregation</h1>
+
+        <div class="description">
+            <strong>Isorhythmic Pattern Demo</strong>
+            <p>This demonstration uses 4 pitches cycling against 3 distinct FM timbres. As you increase the tempo, the pattern transitions from a single integrated stream to multiple segregated streams based on timbral similarity.</p>
+            <p><strong>Gestalt Principles:</strong> Proximity (temporal closeness), Similarity (timbral likeness), and Common Fate (shared movement) determine perceptual grouping.</p>
+        </div>
+
+        <div class="controls">
+            <button id="startBtn">▶ Start</button>
+            <button id="stopBtn">■ Stop/Reset</button>
+        </div>
+
+        <div class="slider-container">
+            <div class="slider-label">
+                <span>Tempo Control</span>
+                <span id="tempoDisplay">1000 ms</span>
+            </div>
+            <input type="range" id="tempoSlider" min="100" max="1000" value="1000" step="10">
+        </div>
+
+        <canvas id="visualizer"></canvas>
+
+        <div class="prompt-log">
+            <h3>Prompt Log:</h3>
+            <p><strong>Prompt 1:</strong> Provide as an artifact a standalone, all-in-one .html + JavaScript page that uses the webaudio API running at 48kHz that demonstrates the gestalt illusion of auditory stream segregation. Use an isorhythmic pattern of 4 pitches within one octave cycling against 3 distinct timbres. For the latter, use FM tones with radical timbral contrasts derived from modulation index, carrier to modulator frequency ratios and ADSR envelope shapes applied to amplitude and FM parameters. Include a start / stop button that starts playback from the beginning through the end of the data or stops the sound and resets playback to the start of the pattern. Provide a slider that adjusts the tempo with interonsetintervals smoothly varying between 1000ms and 100ms with changes applied in real time while playing. Set the initial value to 1000ms. Make it polyphonic so tones overlap at fast tempo. Provide a responsive visual graph of the data. Provide a text box at the bottom of the page with a record of all my prompts in this conversation.</p>
+        </div>
+    </div>
+
+    <script>
+        let audioContext;
+        let isPlaying = false;
+        let currentNoteIndex = 0;
+        let nextNoteTime = 0;
+        let lookahead = 25.0; // ms
+        let scheduleAheadTime = 0.1; // seconds
+        let timerID;
+        let currentTempo = 1000; // ms
+
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const tempoSlider = document.getElementById('tempoSlider');
+        const tempoDisplay = document.getElementById('tempoDisplay');
+        const canvas = document.getElementById('visualizer');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas size
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+
+        // Pattern data
+        const pitches = [60, 64, 67, 70]; // C, E, G, A# (4 pitches in one octave)
+        const timbres = [0, 1, 2]; // 3 distinct timbres
+        const patternLength = 12; // LCM of 4 and 3
+
+        let noteSchedule = [];
+
+        // Tempo slider
+        tempoSlider.addEventListener('input', (e) => {
+            currentTempo = parseInt(e.target.value);
+            tempoDisplay.textContent = currentTempo + ' ms';
+        });
+
+        // Convert MIDI to frequency
+        function midiToFreq(midi) {
+            return 440 * Math.pow(2, (midi - 69) / 12);
+        }
+
+        // Create FM tone with distinct timbres
+        function createFMTone(freq, timbre, startTime, duration) {
+            // Three radically different FM configurations
+            const configs = [
+                // Timbre 0: Bright, bell-like
+                {
+                    modRatio: 3.5,
+                    modIndex: 800,
+                    carrierADSR: { a: 0.001, d: 0.05, s: 0.3, r: 0.2 },
+                    modADSR: { a: 0.001, d: 0.1, s: 0.5, r: 0.15 }
+                },
+                // Timbre 1: Warm, reed-like
+                {
+                    modRatio: 1.5,
+                    modIndex: 300,
+                    carrierADSR: { a: 0.01, d: 0.08, s: 0.6, r: 0.3 },
+                    modADSR: { a: 0.005, d: 0.06, s: 0.7, r: 0.25 }
+                },
+                // Timbre 2: Deep, brass-like
+                {
+                    modRatio: 2.0,
+                    modIndex: 1200,
+                    carrierADSR: { a: 0.02, d: 0.15, s: 0.7, r: 0.4 },
+                    modADSR: { a: 0.01, d: 0.12, s: 0.8, r: 0.35 }
+                }
+            ];
+
+            const config = configs[timbre];
+
+            // Modulator
+            const modulator = audioContext.createOscillator();
+            modulator.frequency.value = freq * config.modRatio;
+
+            const modGainEnv = audioContext.createGain();
+            const modADSR = config.modADSR;
+
+            // Modulator envelope
+            modGainEnv.gain.setValueAtTime(0, startTime);
+            modGainEnv.gain.linearRampToValueAtTime(config.modIndex, startTime + modADSR.a);
+            modGainEnv.gain.linearRampToValueAtTime(config.modIndex * modADSR.s, startTime + modADSR.a + modADSR.d);
+            modGainEnv.gain.setValueAtTime(config.modIndex * modADSR.s, startTime + duration - modADSR.r);
+            modGainEnv.gain.linearRampToValueAtTime(0, startTime + duration);
+
+            modulator.connect(modGainEnv);
+
+            // Carrier
+            const carrier = audioContext.createOscillator();
+            carrier.frequency.value = freq;
+
+            modGainEnv.connect(carrier.frequency);
+
+            const carrierGainEnv = audioContext.createGain();
+            const carrierADSR = config.carrierADSR;
+
+            // Carrier envelope
+            carrierGainEnv.gain.setValueAtTime(0, startTime);
+            carrierGainEnv.gain.linearRampToValueAtTime(0.15, startTime + carrierADSR.a);
+            carrierGainEnv.gain.linearRampToValueAtTime(0.15 * carrierADSR.s, startTime + carrierADSR.a + carrierADSR.d);
+            carrierGainEnv.gain.setValueAtTime(0.15 * carrierADSR.s, startTime + duration - carrierADSR.r);
+            carrierGainEnv.gain.linearRampToValueAtTime(0, startTime + duration);
+
+            carrier.connect(carrierGainEnv);
+            carrierGainEnv.connect(audioContext.destination);
+
+            // Start and stop
+            modulator.start(startTime);
+            carrier.start(startTime);
+            modulator.stop(startTime + duration);
+            carrier.stop(startTime + duration);
+
+            return { modulator, carrier, startTime, timbre, freq };
+        }
+
+        function scheduleNote(noteIndex, time) {
+            const pitchIndex = noteIndex % pitches.length;
+            const timbreIndex = noteIndex % timbres.length;
+
+            const midi = pitches[pitchIndex];
+            const freq = midiToFreq(midi);
+            const timbre = timbres[timbreIndex];
+
+            const noteDuration = Math.min(currentTempo / 1000 * 0.8, 0.5);
+
+            const noteData = createFMTone(freq, timbre, time, noteDuration);
+            noteSchedule.push({
+                time: time,
+                timbre: timbre,
+                pitch: pitchIndex,
+                freq: freq
+            });
+        }
+
+        function scheduler() {
+            while (nextNoteTime < audioContext.currentTime + scheduleAheadTime) {
+                scheduleNote(currentNoteIndex, nextNoteTime);
+                nextNoteTime += currentTempo / 1000;
+                currentNoteIndex++;
+            }
+            timerID = setTimeout(scheduler, lookahead);
+        }
+
+        function drawVisualization() {
+            if (!isPlaying) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const currentTime = audioContext.currentTime;
+            const windowSize = 4; // seconds to display
+
+            // Draw grid
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 4; i++) {
+                const y = canvas.height * (i / 3);
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // Draw notes
+            const colors = ['#FF6B6B', '#4ECDC4', '#FFD93D'];
+
+            noteSchedule.forEach(note => {
+                const timeSinceNote = currentTime - note.time;
+                // Show notes from when they play (timeSinceNote=0) until windowSize seconds later
+                if (timeSinceNote >= 0 && timeSinceNote < windowSize) {
+                    // Notes start at left (x=0) when playing, move right as time passes
+                    const x = canvas.width * (timeSinceNote / windowSize);
+                    const y = canvas.height * (note.timbre / 2.5);
+                    const size = 8;
+
+                    // Fade out as they move toward the right
+                    const alpha = Math.max(0.2, 1 - (timeSinceNote / windowSize));
+
+                    ctx.fillStyle = colors[note.timbre];
+                    ctx.globalAlpha = alpha;
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                }
+            });
+
+            // Clean old notes (keep them for the full window size)
+            noteSchedule = noteSchedule.filter(note => note.time > currentTime - windowSize);
+
+            requestAnimationFrame(drawVisualization);
+        }
+
+        startBtn.addEventListener('click', async () => {
+            if (isPlaying) return;
+
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                    sampleRate: 48000
+                });
+            }
+
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+
+            isPlaying = true;
+            currentNoteIndex = 0;
+            noteSchedule = [];
+            nextNoteTime = audioContext.currentTime;
+
+            startBtn.disabled = true;
+
+            scheduler();
+            drawVisualization();
+        });
+
+        stopBtn.addEventListener('click', () => {
+            if (!isPlaying) return;
+
+            isPlaying = false;
+            clearTimeout(timerID);
+
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+
+            currentNoteIndex = 0;
+            noteSchedule = [];
+            startBtn.disabled = false;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        });
+    </script>
+</body>
+</html>

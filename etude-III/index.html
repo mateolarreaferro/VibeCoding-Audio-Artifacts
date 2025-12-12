@@ -1,0 +1,225 @@
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etude III - Auditory Stream Segregation</title>
+    <link rel="stylesheet" href="../theme.css">
+    <link rel="shortcut icon" href="https://chuck.stanford.edu/doc/images/chuck-logo2023w.png" type="image/png">
+    <!-- include ACE editor and webchuck basic styles -->
+    <script src="https://cdn.jsdelivr.net/gh/ccrma/webchuck-ide@main/cdn/ace/ace.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/ccrma/webchuck-ide@main/cdn/ace/editor.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/ccrma/webchuck-ide@main/cdn/webchuck.css">
+    <style>
+        .nav-home {
+            position: fixed;
+            top: var(--spacing-md);
+            left: var(--spacing-md);
+            padding: 10px 20px;
+            background: var(--color-background);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            color: var(--color-text);
+            text-decoration: none;
+            font-size: 0.9em;
+            font-weight: var(--font-weight-medium);
+            transition: all var(--transition-fast);
+            z-index: 1000;
+        }
+        .nav-home:hover {
+            background: var(--color-text);
+            color: var(--color-background);
+            border-color: var(--color-text);
+        }
+    </style>
+    <!-- define script type="chuck" -->
+    <script type="module">
+      let l, e, t = 'script', p = /(from\s+|import\s+)['"](#[\w\-]+)['"]/g, x = 'textContent', d = document, o;
+      for (o of d.querySelectorAll(t + '[type=chuck]')) o[x] = 'export default `' + o[x] + '`', o.setAttribute('type', 'inline-module');
+      for (o of d.querySelectorAll(t + '[type=inline-module]')) l = d.createElement(t), o.id ? l.id = o.id : 0, l.type = 'module', l[x] = o[x].replace(p, (u, a, z) => (e = d.querySelector(t + z + '[type=module][src]')) ? a + `/* ${ z } */'${ e.src }'` : u), l.src = URL.createObjectURL(new Blob([l[x]], { type: 'application/java' + t })), o.replaceWith(l);//inline
+    </script>
+    <!-- chuck code script -->
+    <script id="chuck" type="chuck">/* Auditory Streaming Illusion: Lydian Isorhythm
+ * 6 Lydian pitches cycle against 5 distinct FM timbres
+ * Audio chain: FM -> Reverb -> Ping-pong Delay -> Stereo -> DAC
+ * As tempo accelerates, timbral contrasts cause perceptual stream segregation
+ */
+
+class IsoRhythm {
+    [60, 64, 66, 67, 69, 71] @=> int keyNum[];
+    keyNum.size() => int nPitches;
+    5 => int nInsts;
+    900::ms => dur interOnsetInterval;
+
+    FM fm[nInsts];
+    new Wurley @=> fm[0];
+    new Rhodey @=> fm[1];
+    new TubeBell @=> fm[2];
+    new FMVoices @=> fm[3];
+    new PercFlut @=> fm[4];
+
+    fm[0].controlOne(3);
+    fm[3].controlTwo(2);
+    fm[4].controlOne(5);
+
+    JCRev reverb[nInsts];
+    Delay delayL[nInsts];
+    Delay delayR[nInsts];
+    Pan2 stereo[nInsts];
+
+    for (0 => int i; i < nInsts; i++) {
+        (200 + i * 50)::ms => delayL[i].max => delayL[i].delay;
+        (250 + i * 50)::ms => delayR[i].max => delayR[i].delay;
+        0.35 => delayL[i].gain;
+        0.3 => delayR[i].gain;
+
+        fm[i] => reverb[i] => delayL[i];
+        reverb[i] => delayR[i];
+        delayL[i] => delayR[i];
+        delayR[i] => delayL[i];
+        delayL[i] => stereo[i];
+        delayR[i] => stereo[i];
+        reverb[i] => stereo[i] => dac;
+
+        fm[i].gain(0.28);
+    }
+
+    140::ms => dur duration;
+
+    fun void play(dur howLong, float accel, dur minInterOnsetInterval) {
+        0 => int p;
+        0 => int i;
+        now => time beg;
+        beg + howLong => time end;
+
+        while (now < end) {
+            Std.mtof(keyNum[p] + 12.0) => fm[i].freq;
+
+            if (i == 0) 0.12 => reverb[i].mix;
+            else if (i == 1) 0.06 => reverb[i].mix;
+            else if (i == 2) 0.15 => reverb[i].mix;
+            else if (i == 3) 0.10 => reverb[i].mix;
+            else 0.04 => reverb[i].mix;
+
+            stereo[i].pan(Math.sin(i * 1.2) * 0.8);
+
+            fm[i].noteOn(1.0);
+            duration => now;
+            fm[i].noteOff(1.0);
+
+            p++;
+            i++;
+
+            nPitches %=> p;
+            nInsts %=> i;
+
+            interOnsetInterval => now;
+
+            if (interOnsetInterval > minInterOnsetInterval)
+                interOnsetInterval * accel => interOnsetInterval;
+            else
+                minInterOnsetInterval => interOnsetInterval;
+        }
+    }
+}
+
+IsoRhythm iso;
+900::ms => iso.interOnsetInterval;
+140::ms => iso.duration;
+
+spork ~ iso.play(55::second, 0.93, 75::ms);
+
+55::second => now;
+</script>
+    <!-- main javascript code -->
+    <script type="inline-module">
+      import { Chuck } from 'https://cdn.jsdelivr.net/npm/webchuck/+esm';
+      import chuckCode from '#chuck';
+
+      const editor = newChuckEditor(document.getElementById("editor"), chuckCode);
+
+      const states = Object.freeze({
+        playing: 0,
+        stopped: 1
+      });
+      let status = states.stopped;
+
+      const action = document.querySelector('#action');
+      const openInIDE = document.querySelector('#openInIDE');
+
+      let theChuck; // global variable
+
+      // Play button
+      action.addEventListener('click', async () => {
+        // Initial load
+        if (theChuck === undefined) {
+          action.disabled = true;
+          action.innerHTML = "Loading...";
+          theChuck = await Chuck.init( [] );
+          action.disabled = false;
+        }
+
+        switch (status) {
+          case states.playing:
+            status = states.stopped;
+            theChuck.removeLastCode();
+            // Stop button
+            action.innerHTML = `
+              Play
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-play" viewBox="0 0 16 16">
+                <path d="M10.804 8 5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z"/>
+              </svg>
+            `;
+            break;
+          case states.stopped:
+            status = states.playing;
+            theChuck.runCode(editor.getValue());
+            // Play button
+            action.innerHTML = `
+              Stop
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-stop" viewBox="0 0 16 16">
+                <path d="M3.5 5A1.5 1.5 0 0 1 5 3.5h6A1.5 1.5 0 0 1 12.5 5v6a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 11V5zM5 4.5a.5.5 0 0 0-.5.5v6a.5.5 0 0 0 .5.5h6a.5.5 0 0 0 .5-.5V5a.5.5 0 0 0-.5-.5H5z"/>
+              </svg>
+            `;
+            break;
+        }
+      });
+
+      openInIDE.addEventListener('click', () => {
+        window.open("https://chuck.stanford.edu/ide", '_blank');
+      });
+
+      const mixer = document.querySelector('#webchuck-gui');
+
+    </script>
+  </head>
+
+  <body>
+    <a href="../index.html" class="nav-home">← Home</a>
+    <header>
+      <div class="text-muted" style="font-size: 0.9em; margin-bottom: 8px;">Etude III</div>
+      <h1><span id="title" style="font-weight: bold">Auditory Stream Segregation</span></h1>
+      <div id="author" style="font-style: italic;">Mateo Larrea</div>
+      <p id="description" style="padding-bottom: 0.5rem;">
+        Three isorhythmic streams with distinct FM timbres that perceptually segregate as tempo accelerates.
+        Listen for how a single melodic line blooms into three independent voices based on timbral similarity.
+      </p>
+
+      <button id="action">
+        Play
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-play" viewBox="0 0 16 16">
+          <path d="M10.804 8 5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z"></path>
+        </svg>
+      </button>
+      <button id="openInIDE">=&gt; <em>to WebChucK IDE</em></button>
+    </header>
+
+
+    <main>
+      <div class="editor-container">
+        <div id="editor" class="ace_editor ace-chuck" style="width: 100%; height: 100%;"></div>
+      </div>
+    </main>
+
+
+
+
+</body></html>

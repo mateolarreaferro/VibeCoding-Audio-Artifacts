@@ -1,0 +1,39 @@
+Real-time Synthesis with Logistic Map
+
+This is a webchuck instrument that uses mouse and trackpad gestures to control chaotic synthesis. The logistic map generates evolving frequency patterns while you move the mouse around. It's basically an improvisation tool where you have control over the chaos parameter but can't fully predict what comes out.
+
+How it works:
+
+Mouse X controls the chaos parameter (r value from 2.8 to 4.0). Moving left gives you stable repeating tones, moving right gets increasingly chaotic and unpredictable.
+
+Mouse Y changes the base frequency. Vertical movement lets you find different pitch ranges.
+
+Mouse wheel adjusts volume. Scrolling up/down controls how loud it is.
+
+Mouse button mutes the sound. Click and hold to cut the audio, release to bring it back.
+
+The synthesis uses 5 oscillators (sine, pulse, square, triangle, saw) with slight detuning for a richer sound. There's stereo reverb on both channels. Everything updates smoothly using envelopes so you don't get clicks or pops.
+
+The logistic map equation is x(n+1) = r * x(n) * (1 - x(n)). Different r values create totally different behaviors. Below 3.0 it settles into steady tones. Around 3.0 to 3.57 you get period doubling. Above 3.57 it goes fully chaotic. There are even weird pockets of order within the chaos around 3.83.
+
+I'm thinking of this as exploring the edge between predictable and unpredictable sound. You set up the conditions but the exact output surprises you. The mouse gives immediate control but the map generates the actual patterns.
+
+Performance notes:
+
+Start with the mouse near the center (moderate chaos). Move slowly to the left first to hear the stable region, then gradually go right into chaos. Use vertical movement to stay in musical frequency ranges. The mouse wheel is good for dynamics and expression. You can also click rhythmically to create muted patterns.
+
+The whole thing runs at 48kHz in webchuck. The chaos updates every 35ms which is fast enough to feel continuous but slow enough that you can hear individual iterations. The oscillators themselves update at sample rate for smooth transitions.
+
+Technical stuff:
+- 5 oscillator bank with detuning
+- Dual mono reverbs (NRev + PRCRev, 9% mix)
+- Envelope smoothing on all parameters (35ms ramps)
+- Three concurrent shreds handling gestures, chaos, and oscillators
+- Sample rate synthesis (48kHz)
+
+The code structure is pretty straightforward. HID setup for the mouse, logistic map class, audio signal chain, envelopes for smoothing, then three parallel processes running simultaneously.
+
+References:
+Logistic Map: https://en.wikipedia.org/wiki/Logistic_map
+WebChuck: https://chuck.stanford.edu/webchuck/
+ChucK Docs: https://chuck.stanford.edu/doc/

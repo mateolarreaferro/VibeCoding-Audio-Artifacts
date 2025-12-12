@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etude I - LLM Web Audio Synthesizer</title>
+    <link rel="stylesheet" href="../theme.css">
+    <style>
+        .nav-home {
+            position: fixed;
+            top: var(--spacing-md);
+            left: var(--spacing-md);
+            padding: 10px 20px;
+            background: var(--color-background);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            color: var(--color-text);
+            text-decoration: none;
+            font-size: 0.9em;
+            font-weight: var(--font-weight-medium);
+            transition: all var(--transition-fast);
+            z-index: 1000;
+        }
+
+        .nav-home:hover {
+            background: var(--color-text);
+            color: var(--color-background);
+            border-color: var(--color-text);
+        }
+
+        .container {
+            padding-top: var(--spacing-2xl);
+        }
+        .controls {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .slider-container {
+            margin: 20px 0;
+        }
+        .slider {
+            width: 100%;
+            height: 40px;
+            background: #ddd;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .slider:hover {
+            opacity: 1;
+        }
+        .toggle-btn {
+            padding: 14px 28px;
+            font-size: 1em;
+            background: var(--color-text);
+            color: var(--color-background);
+            border: 2px solid var(--color-text);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            margin: 10px;
+            font-family: var(--font-family);
+            font-weight: var(--font-weight-regular);
+            transition: all var(--transition-base);
+        }
+        .toggle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+        .toggle-btn.active {
+            background: var(--color-accent);
+            border-color: var(--color-accent);
+        }
+        .visualization {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .viz-panel {
+            flex: 1;
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid var(--color-border);
+            background: var(--color-text);
+            border-radius: var(--radius-sm);
+        }
+        .frequency-display {
+            font-size: 1.5em;
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+            margin: var(--spacing-sm) 0;
+        }
+        .prompt-record {
+            margin-top: var(--spacing-lg);
+            padding: var(--spacing-md);
+            background: var(--color-surface-muted);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+        }
+        .prompt-record h3 {
+            margin-top: 0;
+            color: var(--color-text);
+            font-weight: var(--font-weight-medium);
+        }
+        .prompt-text {
+            font-family: var(--font-family-mono);
+            font-size: 0.85em;
+            line-height: 1.6;
+            color: var(--color-text-muted);
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="nav-home">← Home</a>
+    <div class="container">
+        <div class="text-muted" style="font-size: 0.9em; margin-bottom: 8px;">Etude I - LLM</div>
+        <h1>Web Audio Synthesizer</h1>
+        
+        <div class="controls">
+            <button id="toggleBtn" class="toggle-btn">Start Audio</button>
+            <div class="frequency-display" id="freqDisplay">440 Hz</div>
+            
+            <div class="slider-container">
+                <label for="freqSlider">Frequency (0 - 2000 Hz):</label>
+                <input type="range" id="freqSlider" class="slider" min="0" max="2000" value="440" step="1">
+            </div>
+        </div>
+
+        <div class="visualization">
+            <div class="viz-panel">
+                <h3>Time Domain</h3>
+                <canvas id="timeCanvas" width="400" height="200"></canvas>
+            </div>
+            <div class="viz-panel">
+                <h3>Frequency Domain</h3>
+                <canvas id="freqCanvas" width="400" height="200"></canvas>
+            </div>
+        </div>
+
+        <div class="viz-panel">
+            <h3>Scrolling Spectrogram</h3>
+            <canvas id="spectrogramCanvas" width="800" height="300"></canvas>
+        </div>
+
+        <div class="prompt-record">
+            <h3>Conversation Record</h3>
+            <div class="prompt-text" id="promptText">Provide as an artifact a standalone, all-in-one .html + Javascript page that uses the webaudio API running at 48kHz to synthesize a sine tone whose frequency is manipulated in real time with a slider. The slider range is 0 - 2kHz and will need a constant 5ms update rate. For smoothness those should call exponentialRampToValueAtTime(). Use a toggle button to start / stop the audio. Display the time domain and frequency domain signal in real time. For the latter make it a scrolling spectrogram with time going right to left and with the same frequency range as the slider. Provide a text box at the bottom of the page with a record of my prompts in this conversation.</div>
+        </div>
+    </div>
+
+    <script>
+        class AudioSynthesizer {
+            constructor() {
+                this.audioContext = null;
+                this.oscillator = null;
+                this.analyser = null;
+                this.gainNode = null;
+                this.isPlaying = false;
+                
+                this.timeCanvas = document.getElementById('timeCanvas');
+                this.freqCanvas = document.getElementById('freqCanvas');
+                this.spectrogramCanvas = document.getElementById('spectrogramCanvas');
+                
+                this.timeCtx = this.timeCanvas.getContext('2d');
+                this.freqCtx = this.freqCanvas.getContext('2d');
+                this.spectrogramCtx = this.spectrogramCanvas.getContext('2d');
+                
+                this.spectrogramImageData = this.spectrogramCtx.createImageData(this.spectrogramCanvas.width, this.spectrogramCanvas.height);
+                
+                this.setupEventListeners();
+                this.startVisualization();
+            }
+
+            async initAudio() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                        sampleRate: 48000
+                    });
+                    
+                    this.analyser = this.audioContext.createAnalyser();
+                    this.analyser.fftSize = 2048;
+                    this.analyser.smoothingTimeConstant = 0.3;
+                    
+                    this.gainNode = this.audioContext.createGain();
+                    this.gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                    
+                    this.oscillator = this.audioContext.createOscillator();
+                    this.oscillator.type = 'sine';
+                    this.oscillator.frequency.setValueAtTime(440, this.audioContext.currentTime);
+                    
+                    this.oscillator.connect(this.gainNode);
+                    this.gainNode.connect(this.analyser);
+                    this.analyser.connect(this.audioContext.destination);
+                    
+                    this.oscillator.start();
+                    
+                    return true;
+                } catch (error) {
+                    console.error('Error initializing audio:', error);
+                    return false;
+                }
+            }
+
+            setupEventListeners() {
+                const toggleBtn = document.getElementById('toggleBtn');
+                const freqSlider = document.getElementById('freqSlider');
+                const freqDisplay = document.getElementById('freqDisplay');
+
+                toggleBtn.addEventListener('click', () => {
+                    this.toggleAudio();
+                });
+
+                freqSlider.addEventListener('input', (e) => {
+                    const frequency = parseFloat(e.target.value);
+                    freqDisplay.textContent = `${frequency} Hz`;
+                    this.updateFrequency(frequency);
+                });
+
+                // Update frequency every 5ms for smoothness
+                setInterval(() => {
+                    if (this.isPlaying && this.oscillator) {
+                        const frequency = parseFloat(freqSlider.value);
+                        this.updateFrequency(frequency);
+                    }
+                }, 5);
+            }
+
+            updateFrequency(frequency) {
+                if (this.oscillator && this.audioContext) {
+                    const now = this.audioContext.currentTime;
+                    // Use exponentialRampToValueAtTime for smooth frequency changes
+                    // Clamp frequency to avoid issues with 0 Hz
+                    const clampedFreq = Math.max(frequency, 0.1);
+                    this.oscillator.frequency.exponentialRampToValueAtTime(clampedFreq, now + 0.01);
+                }
+            }
+
+            async toggleAudio() {
+                const toggleBtn = document.getElementById('toggleBtn');
+                
+                if (!this.isPlaying) {
+                    const success = await this.initAudio();
+                    if (success) {
+                        this.isPlaying = true;
+                        toggleBtn.textContent = 'Stop Audio';
+                        toggleBtn.classList.add('active');
+                    }
+                } else {
+                    this.stopAudio();
+                }
+            }
+
+            stopAudio() {
+                if (this.oscillator) {
+                    this.oscillator.stop();
+                    this.oscillator = null;
+                }
+                if (this.audioContext) {
+                    this.audioContext.close();
+                    this.audioContext = null;
+                }
+                
+                this.isPlaying = false;
+                const toggleBtn = document.getElementById('toggleBtn');
+                toggleBtn.textContent = 'Start Audio';
+                toggleBtn.classList.remove('active');
+            }
+
+            startVisualization() {
+                const animate = () => {
+                    this.drawTimeVisualization();
+                    this.drawFrequencyVisualization();
+                    this.drawSpectrogram();
+                    requestAnimationFrame(animate);
+                };
+                animate();
+            }
+
+            drawTimeVisualization() {
+                if (!this.analyser) return;
+
+                const bufferLength = this.analyser.fftSize;
+                const dataArray = new Uint8Array(bufferLength);
+                this.analyser.getByteTimeDomainData(dataArray);
+
+                this.timeCtx.fillStyle = 'rgb(0, 0, 0)';
+                this.timeCtx.fillRect(0, 0, this.timeCanvas.width, this.timeCanvas.height);
+
+                this.timeCtx.lineWidth = 2;
+                this.timeCtx.strokeStyle = 'rgb(0, 255, 0)';
+                this.timeCtx.beginPath();
+
+                const sliceWidth = this.timeCanvas.width / bufferLength;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    const v = dataArray[i] / 128.0;
+                    const y = v * this.timeCanvas.height / 2;
+
+                    if (i === 0) {
+                        this.timeCtx.moveTo(x, y);
+                    } else {
+                        this.timeCtx.lineTo(x, y);
+                    }
+
+                    x += sliceWidth;
+                }
+
+                this.timeCtx.stroke();
+            }
+
+            drawFrequencyVisualization() {
+                if (!this.analyser) return;
+
+                const bufferLength = this.analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                this.analyser.getByteFrequencyData(dataArray);
+
+                this.freqCtx.fillStyle = 'rgb(0, 0, 0)';
+                this.freqCtx.fillRect(0, 0, this.freqCanvas.width, this.freqCanvas.height);
+
+                const barWidth = this.freqCanvas.width / bufferLength * 2.5;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    const barHeight = (dataArray[i] / 255) * this.freqCanvas.height;
+
+                    const r = barHeight + 25 * (i / bufferLength);
+                    const g = 250 * (i / bufferLength);
+                    const b = 50;
+
+                    this.freqCtx.fillStyle = `rgb(${r},${g},${b})`;
+                    this.freqCtx.fillRect(x, this.freqCanvas.height - barHeight, barWidth, barHeight);
+
+                    x += barWidth + 1;
+                }
+            }
+
+            drawSpectrogram() {
+                if (!this.analyser) return;
+
+                const bufferLength = this.analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                this.analyser.getByteFrequencyData(dataArray);
+
+                // Shift existing image data to the left
+                const imageData = this.spectrogramCtx.getImageData(1, 0, this.spectrogramCanvas.width - 1, this.spectrogramCanvas.height);
+                this.spectrogramCtx.putImageData(imageData, 0, 0);
+
+                // Draw new column on the right
+                const x = this.spectrogramCanvas.width - 1;
+                
+                // Map frequency range 0-2kHz to canvas height
+                const maxFreq = 2000;
+                const nyquist = this.audioContext ? this.audioContext.sampleRate / 2 : 24000;
+                
+                for (let y = 0; y < this.spectrogramCanvas.height; y++) {
+                    // Map y position to frequency
+                    const freq = (1 - y / this.spectrogramCanvas.height) * maxFreq;
+                    const binIndex = Math.floor((freq / nyquist) * bufferLength);
+                    
+                    if (binIndex < bufferLength) {
+                        const magnitude = dataArray[binIndex];
+                        const intensity = magnitude / 255;
+                        
+                        // Create color based on intensity
+                        const r = Math.floor(intensity * 255);
+                        const g = Math.floor(intensity * intensity * 255);
+                        const b = Math.floor(intensity * intensity * intensity * 255);
+                        
+                        this.spectrogramCtx.fillStyle = `rgb(${r},${g},${b})`;
+                        this.spectrogramCtx.fillRect(x, y, 1, 1);
+                    }
+                }
+            }
+        }
+
+        // Initialize the synthesizer when the page loads
+        window.addEventListener('load', () => {
+            new AudioSynthesizer();
+        });
+    </script>
+</body>
+</html>

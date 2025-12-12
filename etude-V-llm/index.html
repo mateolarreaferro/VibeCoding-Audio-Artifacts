@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etude V - Logistic Map Sonification</title>
+    <link rel="stylesheet" href="../theme.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .nav-home {
+            position: fixed;
+            top: var(--spacing-md);
+            left: var(--spacing-md);
+            padding: 10px 20px;
+            background: var(--color-background);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            color: var(--color-text);
+            text-decoration: none;
+            font-size: 0.9em;
+            font-weight: var(--font-weight-medium);
+            transition: all var(--transition-fast);
+            z-index: 1000;
+        }
+        .nav-home:hover {
+            background: var(--color-text);
+            color: var(--color-background);
+            border-color: var(--color-text);
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            padding-top: var(--spacing-2xl);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding-top: var(--spacing-xl);
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 16px;
+            color: var(--color-text);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--color-text-muted);
+            margin-bottom: 48px;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .main-content {
+            display: grid;
+            gap: 24px;
+        }
+
+        .visualizer-container {
+            background: var(--color-surface);
+            border-radius: 16px;
+            padding: 32px;
+            border: 1px solid var(--color-border);
+            transition: border-color 0.3s;
+        }
+
+        .visualizer-container:hover {
+            border-color: var(--color-text);
+        }
+
+        canvas {
+            width: 100%;
+            height: 300px;
+            border-radius: 8px;
+            background: var(--color-surface-muted);
+        }
+
+        .controls-panel {
+            background: var(--color-surface);
+            border-radius: 16px;
+            padding: 32px;
+            border: 1px solid var(--color-border);
+        }
+
+        .control-group {
+            margin-bottom: 28px;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-weight: 500;
+            color: var(--color-text);
+            font-size: 14px;
+        }
+
+        .value-display {
+            color: var(--color-accent);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--color-surface-muted);
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        input[type="range"]:hover {
+            background: var(--color-border);
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--color-accent);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: var(--shadow-hover);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--color-accent);
+            cursor: pointer;
+            border: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="range"]::-moz-range-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-start {
+            background: var(--color-text);
+            color: var(--color-background);
+        }
+
+        .btn-start:hover {
+            background: var(--color-background);
+            color: var(--color-text);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn-stop {
+            background: var(--color-surface);
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+        }
+
+        .btn-stop:hover {
+            background: var(--color-surface-muted);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn-record {
+            background: transparent;
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+        }
+
+        .btn-record:hover {
+            background: var(--color-surface);
+            border-color: var(--color-text);
+        }
+
+        .btn-record.recording {
+            background: var(--color-accent);
+            border-color: var(--color-accent);
+            color: var(--color-background);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .info-panel {
+            background: var(--color-surface);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--color-border);
+            margin-top: 24px;
+        }
+
+        .info-panel h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .info-panel p {
+            color: var(--color-text);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 36px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            canvas {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="nav-home">← Home</a>
+    <div class="container">
+        <div class="text-muted" style="font-size: 0.9em; margin-bottom: 8px;">Etude V-LLM</div>
+        <h1>Logistic Map Sonification</h1>
+        <p class="subtitle">real-time chaotic dynamics mapped to audio synthesis</p>
+
+        <div class="main-content">
+            <div class="visualizer-container">
+                <canvas id="visualizer"></canvas>
+            </div>
+
+            <div class="controls-panel">
+                <div class="control-group">
+                    <label>
+                        <span>Update Rate</span>
+                        <span class="value-display" id="rateDisplay">25 ms</span>
+                    </label>
+                    <input type="range" id="updateRate" min="1" max="50" value="25" step="1">
+                </div>
+
+                <div class="control-group">
+                    <label>
+                        <span>Chaos Parameter (r)</span>
+                        <span class="value-display" id="rDisplay">3.7</span>
+                    </label>
+                    <input type="range" id="chaosR" min="2.0" max="4.0" value="3.7" step="0.01">
+                </div>
+
+                <div class="control-group">
+                    <label>
+                        <span>Min Frequency</span>
+                        <span class="value-display" id="minFreqDisplay">200 Hz</span>
+                    </label>
+                    <input type="range" id="minFreq" min="100" max="500" value="200" step="10">
+                </div>
+
+                <div class="control-group">
+                    <label>
+                        <span>Max Frequency</span>
+                        <span class="value-display" id="maxFreqDisplay">1000 Hz</span>
+                    </label>
+                    <input type="range" id="maxFreq" min="500" max="2000" value="1000" step="10">
+                </div>
+
+                <div class="control-group">
+                    <label>
+                        <span>Volume</span>
+                        <span class="value-display" id="volumeDisplay">0.3</span>
+                    </label>
+                    <input type="range" id="volume" min="0" max="1" value="0.3" step="0.01">
+                </div>
+
+                <div class="button-group">
+                    <button id="startBtn" class="btn-start">Start</button>
+                    <button id="stopBtn" class="btn-stop">Stop</button>
+                    <button id="recordBtn" class="btn-record">Record</button>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <h3>About</h3>
+                <p>the logistic map (x → r·x·(1-x)) demonstrates how complex chaotic behavior emerges from simple equations. this webapp sonifies the map by translating its values to frequency and amplitude in real-time using the webaudio api at 48khz.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // WebAudio Setup (48kHz)
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)({
+            sampleRate: 48000
+        });
+
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.start();
+        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+
+        // Logistic Map Implementation
+        class LogisticMap {
+            constructor(x0 = 0.5, r = 3.7) {
+                this.x = x0;
+                this.r = r;
+            }
+
+            setR(r) {
+                this.r = r;
+            }
+
+            reset(x0 = 0.5) {
+                this.x = x0;
+            }
+
+            tick() {
+                this.x = this.r * this.x * (1.0 - this.x);
+                return this.x;
+            }
+        }
+
+        const logisticMap = new LogisticMap();
+
+        // Enhanced Visualization
+        const canvas = document.getElementById('visualizer');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+        canvas.height = 300 * window.devicePixelRatio;
+        canvas.style.width = canvas.offsetWidth + 'px';
+        canvas.style.height = '300px';
+
+        const dataPoints = [];
+        const maxDataPoints = canvas.width / 2;
+
+        function drawVisualization() {
+            // Clear with light background
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--color-surface-muted').trim();
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (dataPoints.length > 0) {
+                // Draw grid lines
+                ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--color-border').trim();
+                ctx.lineWidth = 1;
+                for (let i = 0; i <= 4; i++) {
+                    const y = (i / 4) * canvas.height;
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                    ctx.stroke();
+                }
+
+                // Draw main waveform
+                ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim();
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+
+                for (let i = 0; i < dataPoints.length; i++) {
+                    const x = (i / maxDataPoints) * canvas.width;
+                    const y = canvas.height - (dataPoints[i] * canvas.height);
+
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+
+                // Draw filled area under curve
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim();
+                gradient.addColorStop(0, accentColor + '40');
+                gradient.addColorStop(1, accentColor + '00');
+
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height);
+                for (let i = 0; i < dataPoints.length; i++) {
+                    const x = (i / maxDataPoints) * canvas.width;
+                    const y = canvas.height - (dataPoints[i] * canvas.height);
+                    ctx.lineTo(x, y);
+                }
+                ctx.lineTo((dataPoints.length / maxDataPoints) * canvas.width, canvas.height);
+                ctx.closePath();
+                ctx.fill();
+
+                // Draw current value indicator
+                const lastX = ((dataPoints.length - 1) / maxDataPoints) * canvas.width;
+                const lastY = canvas.height - (dataPoints[dataPoints.length - 1] * canvas.height);
+
+                // Outer glow
+                ctx.fillStyle = accentColor + '40';
+                ctx.beginPath();
+                ctx.arc(lastX, lastY, 12, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Inner dot
+                ctx.fillStyle = accentColor;
+                ctx.beginPath();
+                ctx.arc(lastX, lastY, 6, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Audio Recording Setup
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let isRecording = false;
+
+        const recordBtn = document.getElementById('recordBtn');
+
+        function startRecording() {
+            const dest = audioContext.createMediaStreamDestination();
+            gainNode.connect(dest);
+
+            mediaRecorder = new MediaRecorder(dest.stream);
+            recordedChunks = [];
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    recordedChunks.push(e.data);
+                }
+            };
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'logistic-map-sonification.webm';
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+
+            mediaRecorder.start();
+            isRecording = true;
+            recordBtn.textContent = 'Stop Recording';
+            recordBtn.classList.add('recording');
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                recordBtn.textContent = 'Record';
+                recordBtn.classList.remove('recording');
+            }
+        }
+
+        recordBtn.addEventListener('click', () => {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        });
+
+        // Control Variables
+        let isPlaying = false;
+        let updateInterval = null;
+        let updateRate = 25;
+        let minFreq = 200;
+        let maxFreq = 1000;
+        let masterVolume = 0.3;
+
+        // UI Controls
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const updateRateSlider = document.getElementById('updateRate');
+        const chaosRSlider = document.getElementById('chaosR');
+        const minFreqSlider = document.getElementById('minFreq');
+        const maxFreqSlider = document.getElementById('maxFreq');
+        const volumeSlider = document.getElementById('volume');
+
+        updateRateSlider.addEventListener('input', (e) => {
+            updateRate = parseInt(e.target.value);
+            document.getElementById('rateDisplay').textContent = updateRate + ' ms';
+
+            if (isPlaying) {
+                clearInterval(updateInterval);
+                updateInterval = setInterval(updateAudio, updateRate);
+            }
+        });
+
+        chaosRSlider.addEventListener('input', (e) => {
+            const r = parseFloat(e.target.value);
+            logisticMap.setR(r);
+            document.getElementById('rDisplay').textContent = r.toFixed(2);
+        });
+
+        minFreqSlider.addEventListener('input', (e) => {
+            minFreq = parseInt(e.target.value);
+            document.getElementById('minFreqDisplay').textContent = minFreq + ' Hz';
+        });
+
+        maxFreqSlider.addEventListener('input', (e) => {
+            maxFreq = parseInt(e.target.value);
+            document.getElementById('maxFreqDisplay').textContent = maxFreq + ' Hz';
+        });
+
+        volumeSlider.addEventListener('input', (e) => {
+            masterVolume = parseFloat(e.target.value);
+            document.getElementById('volumeDisplay').textContent = masterVolume.toFixed(2);
+        });
+
+        // Audio Update Function
+        function updateAudio() {
+            const now = audioContext.currentTime;
+            const rampTime = updateRate / 1000.0;
+
+            const value = logisticMap.tick();
+
+            const frequency = minFreq + (value * (maxFreq - minFreq));
+            const amplitude = value * masterVolume;
+
+            oscillator.frequency.exponentialRampToValueAtTime(
+                Math.max(frequency, 20),
+                now + rampTime
+            );
+
+            gainNode.gain.exponentialRampToValueAtTime(
+                Math.max(amplitude, 0.001),
+                now + rampTime
+            );
+
+            dataPoints.push(value);
+            if (dataPoints.length > maxDataPoints) {
+                dataPoints.shift();
+            }
+
+            drawVisualization();
+        }
+
+        // Start/Stop Controls
+        startBtn.addEventListener('click', () => {
+            if (!isPlaying) {
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+
+                isPlaying = true;
+                logisticMap.reset(0.5);
+                dataPoints.length = 0;
+
+                const now = audioContext.currentTime;
+                gainNode.gain.setValueAtTime(0.001, now);
+
+                updateInterval = setInterval(updateAudio, updateRate);
+            }
+        });
+
+        stopBtn.addEventListener('click', () => {
+            if (isPlaying) {
+                isPlaying = false;
+                clearInterval(updateInterval);
+
+                const now = audioContext.currentTime;
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+
+                logisticMap.reset(0.5);
+                dataPoints.length = 0;
+                drawVisualization();
+            }
+        });
+
+        // Initial Setup
+        drawVisualization();
+
+        window.addEventListener('resize', () => {
+            canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+            canvas.height = 300 * window.devicePixelRatio;
+            drawVisualization();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VibeCoding Audio Artifacts - Mateo Larrea</title>
+    <link rel="stylesheet" href="theme.css">
+    <style>
+        .header-section {
+            text-align: center;
+            margin-bottom: var(--spacing-2xl);
+            padding: var(--spacing-2xl) 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            color: var(--color-text-muted);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .etudes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: var(--spacing-lg);
+            margin: var(--spacing-2xl) 0;
+        }
+
+        .etude-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            transition: all var(--transition-base);
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .etude-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--color-text);
+        }
+
+        .etude-number {
+            font-size: 0.85em;
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .etude-title {
+            font-size: 1.4em;
+            font-weight: var(--font-weight-regular);
+            color: var(--color-text);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .etude-links {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-top: auto;
+            padding-top: var(--spacing-sm);
+        }
+
+        .etude-link {
+            flex: 1;
+            padding: 10px 20px;
+            text-align: center;
+            background: var(--color-surface-muted);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            color: var(--color-text);
+            font-size: 0.9em;
+            font-weight: var(--font-weight-regular);
+            transition: all var(--transition-fast);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .etude-link:hover {
+            background: var(--color-text);
+            color: var(--color-background);
+            border-color: var(--color-text);
+            transform: translateY(-1px);
+        }
+
+        .etude-link.llm {
+            background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hover));
+            color: white;
+            border-color: var(--color-accent);
+        }
+
+        .etude-link.llm:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-hover);
+            opacity: 0.9;
+        }
+
+        .intro-text {
+            max-width: 700px;
+            margin: 0 auto var(--spacing-2xl) auto;
+            text-align: center;
+            color: var(--color-text-muted);
+            line-height: 1.8;
+        }
+
+        .footer {
+            margin-top: var(--spacing-2xl);
+            padding-top: var(--spacing-2xl);
+            border-top: 1px solid var(--color-border);
+            text-align: center;
+            color: var(--color-text-light);
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .etudes-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .etude-links {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-section">
+            <p class="subtitle">Mateo Larrea</p>
+            <h1>VibeCoding Audio Artifacts</h1>
+            <p class="intro-text">
+                A collection of etudes exploring sound synthesis, spatial audio, and interactive audio experiences
+                using ChucK, WebChucK, and custom audio DSLs.
+            </p>
+        </div>
+
+        <div class="etudes-grid">
+            <div class="etude-card">
+                <div class="etude-number">Etude I</div>
+                <h3 class="etude-title">Hello Sine</h3>
+                <div class="etude-links">
+                    <a href="etude-I/index.html" class="etude-link">No-LLM</a>
+                    <a href="etude-I-llm/index.html" class="etude-link llm">LLM</a>
+                </div>
+            </div>
+
+            <div class="etude-card">
+                <div class="etude-number">Etude II</div>
+                <h3 class="etude-title">Additive Synthesis</h3>
+                <div class="etude-links">
+                    <a href="etude-II/index.html" class="etude-link">No-LLM</a>
+                    <a href="etude-II-llm/index.html" class="etude-link llm">LLM</a>
+                </div>
+            </div>
+
+            <div class="etude-card">
+                <div class="etude-number">Etude III</div>
+                <h3 class="etude-title">Interactive Audio</h3>
+                <div class="etude-links">
+                    <a href="etude-III/index.html" class="etude-link">No-LLM</a>
+                    <a href="etude-III-llm/index.html" class="etude-link llm">LLM</a>
+                </div>
+            </div>
+
+            <div class="etude-card">
+                <div class="etude-number">Etude IV</div>
+                <h3 class="etude-title">Binaural Radio Play</h3>
+                <div class="etude-links">
+                    <a href="etude-IV/index.html" class="etude-link">No-LLM</a>
+                    <a href="etude-IV-llm/index.html" class="etude-link llm">LLM</a>
+                </div>
+            </div>
+
+            <div class="etude-card">
+                <div class="etude-number">Etude V</div>
+                <h3 class="etude-title">Sonic Architecture</h3>
+                <div class="etude-links">
+                    <a href="etude-V/index.html" class="etude-link">No-LLM</a>
+                    <a href="etude-V-llm/index.html" class="etude-link llm">LLM</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>VibeCoding Audio Artifacts - 220A Stanford CCRMA</p>
+            <p>Mateo Larrea - 2024</p>
+        </div>
+    </div>
+</body>
+</html>

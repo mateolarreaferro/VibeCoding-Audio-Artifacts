@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="https://chuck.stanford.edu/doc/images/chuck-logo2023w.png" type="image/png">
+    <link rel="stylesheet" href="../theme.css">
+    <!-- include ACE editor and webchuck basic styles -->
+    <script src="https://cdn.jsdelivr.net/gh/ccrma/webchuck-ide@main/cdn/ace/ace.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/ccrma/webchuck-ide@main/cdn/ace/editor.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/ccrma/webchuck-ide@main/cdn/webchuck.css">
+    <style>
+        .nav-home {
+            position: fixed;
+            top: var(--spacing-md);
+            left: var(--spacing-md);
+            padding: 10px 20px;
+            background: var(--color-background);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            color: var(--color-text);
+            text-decoration: none;
+            font-size: 0.9em;
+            font-weight: var(--font-weight-medium);
+            transition: all var(--transition-fast);
+            z-index: 1000;
+        }
+
+        .nav-home:hover {
+            background: var(--color-text);
+            color: var(--color-background);
+            border-color: var(--color-text);
+        }
+
+        header {
+            margin-top: var(--spacing-2xl);
+        }
+    </style>
+    <!-- define script type="chuck" -->
+    <script type="module">
+      let l, e, t = 'script', p = /(from\s+|import\s+)['"](#[\w\-]+)['"]/g, x = 'textContent', d = document, o;
+      for (o of d.querySelectorAll(t + '[type=chuck]')) o[x] = 'export default `' + o[x] + '`', o.setAttribute('type', 'inline-module');
+      for (o of d.querySelectorAll(t + '[type=inline-module]')) l = d.createElement(t), o.id ? l.id = o.id : 0, l.type = 'module', l[x] = o[x].replace(p, (u, a, z) => (e = d.querySelector(t + z + '[type=module][src]')) ? a + `/* ${ z } */'${ e.src }'` : u), l.src = URL.createObjectURL(new Blob([l[x]], { type: 'application/java' + t })), o.replaceWith(l);//inline
+    </script>
+    <!-- chuck code script -->
+    <script id="chuck" type="chuck">/**
+ * The GUI Panel (below the editor) allows user control for global variables 
+ * via sliders and buttons. GUI float sliders go from [0.0,1.0]
+ */
+
+/* Play a sine wave and control the frecuency with the GUI */
+/*
+    1. Open the GUI Panel below and hit "Generate GUI".
+    2. Run the code.
+    3. Play with the slider f to change the frequency.
+*/
+
+SinOsc osc => dac;
+0 => global float f; // global variables create a GUI slider
+
+while(samp => now){
+    // update frequency
+    (f * 440)+220 => osc.freq;
+}
+</script>
+    <!-- main javascript code -->
+    <script type="inline-module">
+      import { Chuck } from 'https://cdn.jsdelivr.net/npm/webchuck/+esm';
+      import chuckCode from '#chuck';
+
+      const editor = newChuckEditor(document.getElementById("editor"), chuckCode);
+
+      const states = Object.freeze({
+        playing: 0,
+        stopped: 1
+      });
+      let status = states.stopped;
+
+      const action = document.querySelector('#action');
+      const openInIDE = document.querySelector('#openInIDE');
+
+      let theChuck; // global variable
+
+      // Play button
+      action.addEventListener('click', async () => {
+        // Initial load
+        if (theChuck === undefined) {
+          action.disabled = true;
+          action.innerHTML = "Loading...";
+          theChuck = await Chuck.init( [] );
+          action.disabled = false;
+        }
+
+        switch (status) {
+          case states.playing:
+            status = states.stopped;
+            theChuck.removeLastCode();
+            // Stop button
+            action.innerHTML = `
+              Play
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-play" viewBox="0 0 16 16">
+                <path d="M10.804 8 5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z"/>
+              </svg>
+            `;
+            break;
+          case states.stopped:
+            status = states.playing;
+            theChuck.runCode(editor.getValue());
+            // Play button
+            action.innerHTML = `
+              Stop
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-stop" viewBox="0 0 16 16">
+                <path d="M3.5 5A1.5 1.5 0 0 1 5 3.5h6A1.5 1.5 0 0 1 12.5 5v6a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 11V5zM5 4.5a.5.5 0 0 0-.5.5v6a.5.5 0 0 0 .5.5h6a.5.5 0 0 0 .5-.5V5a.5.5 0 0 0-.5-.5H5z"/>
+              </svg>
+            `;
+            break;
+        }
+      });
+
+      openInIDE.addEventListener('click', () => {
+        window.open("https://chuck.stanford.edu/ide", '_blank');
+      });
+
+      const mixer = document.querySelector('#webchuck-gui');
+
+      // MIXER CODE for GUI (if there are global variables)
+      const sliders = [...chuckCode.matchAll(/\bglobal float\s+(\w+)\b/g)]
+      .map(([, variable]) => variable);
+
+      if (sliders.length > 0) mixer.style.display = 'flex';
+
+      sliders.forEach(variable => {
+        const div = document.createElement('div');
+        div.classList.add('webchuck-slider');
+
+        const p = document.createElement('p');
+        p.textContent = variable;
+
+        const input = document.createElement('input');
+        input.setAttribute('type', 'range');
+        input.setAttribute('min', '0');
+        input.setAttribute('max', '1');
+        input.setAttribute('value', '0');
+        input.setAttribute('step', '0.01');
+
+        div.append(p, input);
+        mixer.append(div);
+
+        input.addEventListener('input', e => theChuck?.setFloat(variable, +e.target.value));
+      });
+    </script>
+    <title>Etude I - Hello Sine</title>
+  </head>
+
+  <body>
+    <a href="../index.html" class="nav-home">← Home</a>
+    <header>
+      <div class="text-muted" style="font-size: 0.9em; margin-bottom: 8px;">Etude I</div>
+      <h1><span id="title">Hello Sine</span></h1>
+      <div id="author" class="text-muted" style="font-style: italic;">Mateo Larrea</div>
+      <p id="description" style="padding-bottom: 0.5rem;"></p>
+      <div id="webchuck-gui"></div>
+      <button id="action">
+        Play
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-play" viewBox="0 0 16 16">
+          <path d="M10.804 8 5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z"></path>
+        </svg>
+      </button>
+      <button id="openInIDE">=&gt; <em>to WebChucK IDE</em></button>
+    </header>
+
+
+    <main>
+      <div class="editor-container">
+        <div id="editor" class="ace_editor ace-chuck" style="width: 100%; height: 100%;"></div>
+      </div>
+    </main>
+
+  
+
+
+</body></html>
